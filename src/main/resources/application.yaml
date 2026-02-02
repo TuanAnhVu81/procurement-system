@@ -14,4 +14,8 @@ spring:
       ddl-auto: update
     show-sql: true
 
+jwt:
+  signer-key: ${JWT_SIGNER_KEY}
+  expiration: ${JWT_EXPIRATION}
+
 
