@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Env ###
+.env
+
+# Personal notes
+Kien truc.txt
+Implementation_Plan.md
+Project_Summary.md
+Infrastructure.md
