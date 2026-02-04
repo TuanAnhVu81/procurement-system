@@ -17,6 +17,17 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(1008, "Invalid username or password", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(1009, "Invalid token", HttpStatus.UNAUTHORIZED),
     TOKEN_EXPIRED(1010, "Token has expired", HttpStatus.UNAUTHORIZED),
+    
+    // Vendor Management error codes (2000-2099)
+    VENDOR_NOT_FOUND(2001, "Vendor not found", HttpStatus.NOT_FOUND),
+    VENDOR_CODE_EXISTED(2002, "Vendor code already exists", HttpStatus.BAD_REQUEST),
+    INVALID_VENDOR_RATING(2003, "Rating must be between 1.0 and 5.0", HttpStatus.BAD_REQUEST),
+    
+    // Material Management error codes (2100-2199)
+    MATERIAL_NOT_FOUND(2101, "Material not found", HttpStatus.NOT_FOUND),
+    MATERIAL_CODE_EXISTED(2102, "Material code already exists", HttpStatus.BAD_REQUEST),
+    INVALID_MATERIAL_PRICE(2103, "Base price must be greater than 0", HttpStatus.BAD_REQUEST),
+    INVALID_CURRENCY(2104, "Currency must be USD, VND, or EUR", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

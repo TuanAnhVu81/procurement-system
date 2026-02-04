@@ -28,8 +28,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Material extends BaseEntity {
-    
-    @NotBlank(message = "Material code is required")
+
     @Size(max = 50, message = "Material code must not exceed 50 characters")
     @Column(name = "material_code", nullable = false, unique = true, length = 50)
     String materialCode;

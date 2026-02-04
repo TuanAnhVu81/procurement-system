@@ -1,6 +1,7 @@
 package com.anhvt.epms.procurement.exception;
 
 import com.anhvt.epms.procurement.dto.response.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * Global Exception Handler to capture and process exceptions across the application.
  */
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -19,6 +21,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse<String>> handlingRuntimeException(Exception exception) {
+        // Log full stack trace for debugging
+        log.error("❌ UNCAUGHT EXCEPTION: ", exception);
+        
         ApiResponse<String> apiResponse = new ApiResponse<>();
         
         // Use generic error code for unhandled exceptions

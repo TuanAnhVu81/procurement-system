@@ -30,7 +30,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Vendor extends BaseEntity {
     
-    @NotBlank(message = "Vendor code is required")
     @Size(max = 20, message = "Vendor code must not exceed 20 characters")
     @Column(name = "vendor_code", nullable = false, unique = true, length = 20)
     String vendorCode;
@@ -52,6 +51,9 @@ public class Vendor extends BaseEntity {
     
     @Column(name = "rating")
     Double rating;
+    
+    @Column(name = "rating_comment", columnDefinition = "TEXT")
+    String ratingComment;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

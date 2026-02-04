@@ -42,7 +42,9 @@ public class SecurityConfig {
                     "/auth/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
-                    "/swagger-ui.html"
+                    "/swagger-ui.html",
+                    "/api/**", // TODO: Remove in production (Allow for testing)
+                    "/odata/**" // TODO: Remove in production (Allow for testing)
                 ).permitAll() // Public endpoints
                 .anyRequest().authenticated() // All other endpoints require authentication
             )
