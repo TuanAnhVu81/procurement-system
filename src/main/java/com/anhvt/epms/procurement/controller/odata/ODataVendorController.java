@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -35,8 +36,10 @@ public class ODataVendorController {
     /**
      * GET /odata/Vendors - Get vendor collection
      * OData query options: $top, $skip, $orderby, $count, $filter
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Get vendor collection (OData V4)",
         description = "Retrieve vendors with OData query options: $top, $skip, $orderby, $count, $filter"
@@ -109,8 +112,10 @@ public class ODataVendorController {
     
     /**
      * GET /odata/Vendors/{id} - Get single vendor by ID
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Get vendor by ID",
         description = "Retrieve a single vendor by UUID"

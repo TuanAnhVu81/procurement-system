@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,11 @@ import java.util.UUID;
 /**
  * REST Controller for material management endpoints
  * Provides CRUD operations and material-specific features
+ * 
+ * Authorization Rules:
+ * - ADMIN: Full access (Create, Read, Update, Delete)
+ * - EMPLOYEE: Read-only access
+ * - MANAGER: Read-only access
  */
 @RestController
 @RequestMapping("/api/materials")
@@ -34,9 +40,11 @@ public class MaterialController {
     /**
      * Create a new material
      * POST /api/materials
+     * Required Role: ADMIN
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create new material", description = "Create a new material with auto-generated material code")
     public ApiResponse<MaterialResponse> createMaterial(@Valid @RequestBody MaterialRequest request) {
         MaterialResponse response = materialService.createMaterial(request);
@@ -51,8 +59,10 @@ public class MaterialController {
     /**
      * Get all materials with pagination
      * GET /api/materials
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get all materials", description = "Retrieve all materials with pagination and sorting")
     public Page<MaterialResponse> getAllMaterials(
             @RequestParam(defaultValue = "0") int page,
@@ -66,8 +76,10 @@ public class MaterialController {
     /**
      * Get active materials only
      * GET /api/materials/active
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get active materials", description = "Retrieve only active materials with pagination")
     public Page<MaterialResponse> getActiveMaterials(
             @RequestParam(defaultValue = "0") int page,
@@ -81,8 +93,10 @@ public class MaterialController {
     /**
      * Get material by ID
      * GET /api/materials/{id}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get material by ID", description = "Retrieve a specific material by its ID")
     public ApiResponse<MaterialResponse> getMaterialById(@PathVariable UUID id) {
         MaterialResponse response = materialService.getMaterialById(id);
@@ -97,8 +111,10 @@ public class MaterialController {
     /**
      * Search material by code
      * GET /api/materials/search?code={materialCode}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Search material by code", description = "Find material by unique material code")
     public ApiResponse<MaterialResponse> searchMaterialByCode(@RequestParam String code) {
         MaterialResponse response = materialService.getMaterialByCode(code);
@@ -113,8 +129,10 @@ public class MaterialController {
     /**
      * Get materials by unit
      * GET /api/materials/unit/{unit}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/unit/{unit}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get materials by unit", description = "Filter materials by unit of measure (KG, Box, PCS, etc.)")
     public ApiResponse<List<MaterialResponse>> getMaterialsByUnit(@PathVariable String unit) {
         List<MaterialResponse> response = materialService.getMaterialsByUnit(unit);
@@ -129,8 +147,10 @@ public class MaterialController {
     /**
      * Get materials by category
      * GET /api/materials/category/{category}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/category/{category}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get materials by category", description = "Filter materials by category")
     public ApiResponse<List<MaterialResponse>> getMaterialsByCategory(@PathVariable String category) {
         List<MaterialResponse> response = materialService.getMaterialsByCategory(category);
@@ -145,8 +165,10 @@ public class MaterialController {
     /**
      * Update material
      * PUT /api/materials/{id}
+     * Required Role: ADMIN
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update material", description = "Update material information (material code cannot be changed)")
     public ApiResponse<MaterialResponse> updateMaterial(
             @PathVariable UUID id,
@@ -163,9 +185,11 @@ public class MaterialController {
     /**
      * Delete material (soft delete)
      * DELETE /api/materials/{id}
+     * Required Role: ADMIN
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete material", description = "Soft delete material (sets isActive to false, preserves data)")
     public ApiResponse<Void> deleteMaterial(@PathVariable UUID id) {
         materialService.deleteMaterial(id);

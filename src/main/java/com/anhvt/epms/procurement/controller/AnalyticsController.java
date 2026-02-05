@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,7 +19,11 @@ import java.util.List;
 /**
  * REST Controller for Analytics and Reporting
  * Provides business intelligence endpoints for purchase order analytics
- * Phase 3: WITHOUT authorization (@PreAuthorize) - will be added in Phase 4
+ * 
+ * Authorization Rules:
+ * - MANAGER: Full access to all analytics
+ * - ADMIN: Full access to all analytics
+ * - EMPLOYEE: No access
  */
 @RestController
 @RequestMapping("/api/analytics")
@@ -38,8 +43,10 @@ public class AnalyticsController {
      * - Percentage distribution
      * 
      * Use case: Dashboard overview showing PO distribution
+     * Required Role: MANAGER, ADMIN
      */
     @GetMapping("/po-status-summary")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(
         summary = "Get PO status summary",
         description = "Returns aggregated statistics of purchase orders grouped by status (CREATED, PENDING, APPROVED, etc.)"
@@ -62,8 +69,10 @@ public class AnalyticsController {
      * Returns vendors ranked by total approved purchase order value
      * 
      * Use case: Identify strategic vendors for price negotiation
+     * Required Role: MANAGER, ADMIN
      */
     @GetMapping("/top-vendors")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(
         summary = "Get top vendors by purchase value",
         description = "Returns vendors ranked by total approved purchase order value. Useful for identifying strategic vendors."
@@ -93,8 +102,10 @@ public class AnalyticsController {
      * Returns purchase statistics aggregated by month for a date range
      * 
      * Use case: Trend analysis for budget planning and forecasting
+     * Required Role: MANAGER, ADMIN
      */
     @GetMapping("/monthly-trend")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(
         summary = "Get monthly purchase trend",
         description = "Returns purchase statistics aggregated by month for the specified date range"
@@ -130,8 +141,10 @@ public class AnalyticsController {
      * Convenience endpoint for getting trend for the last N months
      * 
      * Use case: Quick dashboard view of recent purchase activity
+     * Required Role: MANAGER, ADMIN
      */
     @GetMapping("/recent-trend")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(
         summary = "Get recent monthly purchase trend",
         description = "Returns purchase statistics for the last N months (default: 6 months)"
@@ -161,8 +174,10 @@ public class AnalyticsController {
      * Returns all key analytics in a single call for dashboard display
      * 
      * Use case: Single API call to populate management dashboard
+     * Required Role: MANAGER, ADMIN
      */
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(
         summary = "Get comprehensive dashboard analytics",
         description = "Returns all key analytics (status summary, top vendors, recent trend) in a single response"

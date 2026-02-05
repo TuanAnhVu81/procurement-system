@@ -32,6 +32,7 @@ public class JwtServiceImpl implements JwtService {
 
     /**
      * Generate JWT token for authenticated user
+     * Includes user roles for authorization purposes
      * @param user the authenticated user
      * @return JWT token string
      */
@@ -41,6 +42,12 @@ public class JwtServiceImpl implements JwtService {
         claims.put("userId", user.getId());
         claims.put("email", user.getEmail());
         claims.put("fullName", user.getFullName());
+        
+        // Add roles to JWT claims for @PreAuthorize authorization
+        // Extract role names from User's roles collection
+        claims.put("roles", user.getRoles().stream()
+                .map(role -> role.getName())
+                .toList());
         
         return Jwts.builder()
                 .claims(claims)

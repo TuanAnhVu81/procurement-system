@@ -27,11 +27,22 @@ public class AuthenticationController {
 
     /**
      * Register a new user
+     * 
+     * IMPORTANT: Public registration only creates ROLE_EMPLOYEE accounts.
+     * Admin and Manager accounts are created automatically on app startup via DataInitializer.
+     * 
+     * Default accounts are configured via environment variables or application.yaml:
+     * - app.security.admin.username / password
+     * - app.security.manager.username / password
+     * 
      * @param request registration request
-     * @return API response with user data
+     * @return API response with user data (role will be ROLE_EMPLOYEE)
      */
     @PostMapping("/register")
-    @Operation(summary = "Register new user", description = "Create a new user account")
+    @Operation(
+        summary = "Register new employee user", 
+        description = "Create a new user account with ROLE_EMPLOYEE. Admin and Manager accounts are pre-configured via environment variables."
+    )
     public ApiResponse<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse response = userService.register(request);
         

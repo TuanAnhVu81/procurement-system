@@ -18,4 +18,15 @@ jwt:
   signer-key: ${JWT_SIGNER_KEY}
   expiration: ${JWT_EXPIRATION}
 
+app:
+  security:
+    admin:
+      username: ${ADMIN_USERNAME:admin}
+      password: ${ADMIN_PASSWORD:ChangeMeInEnv}
+      email: ${ADMIN_EMAIL:admin@epms.com}
+    manager:
+      username: ${MANAGER_USERNAME:manager}
+      password: ${MANAGER_PASSWORD:ChangeMeInEnv}
+      email: ${MANAGER_EMAIL:manager@epms.com}
+
 

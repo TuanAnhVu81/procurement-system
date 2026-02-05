@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -24,7 +25,13 @@ import java.util.UUID;
 /**
  * REST Controller for Purchase Order Management
  * Provides endpoints for CRUD operations and workflow management (submit, approve, reject)
- * Phase 1: WITHOUT authorization (@PreAuthorize) - will be added in Phase 4
+ * 
+ * Authorization Rules:
+ * - EMPLOYEE: Create, Update (creator only), Delete (creator only), Submit (creator only)
+ * - MANAGER: Approve, Reject, Read all
+ * - ADMIN: Read all
+ * 
+ * Note: "Creator only" validation is handled at service layer
  */
 @RestController
 @RequestMapping("/api/purchase-orders")
@@ -37,9 +44,11 @@ public class PurchaseOrderController {
     /**
      * Create a new purchase order
      * POST /api/purchase-orders
+     * Required Role: EMPLOYEE
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @Operation(
         summary = "Create new purchase order",
         description = "Create a new purchase order with auto-generated PO number and automatic calculation of totals"
@@ -59,11 +68,13 @@ public class PurchaseOrderController {
     /**
      * Update an existing purchase order
      * PUT /api/purchase-orders/{id}
+     * Required Role: EMPLOYEE (creator only - validated at service layer)
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @Operation(
         summary = "Update purchase order",
-        description = "Update purchase order details. Can only update if status is CREATED"
+        description = "Update purchase order details. Can only update if status is CREATED and you are the creator"
     )
     public ApiResponse<PurchaseOrderResponse> updatePurchaseOrder(
             @PathVariable @Parameter(description = "Purchase Order ID") UUID id,
@@ -81,12 +92,14 @@ public class PurchaseOrderController {
     /**
      * Soft delete a purchase order
      * DELETE /api/purchase-orders/{id}
+     * Required Role: EMPLOYEE (creator only - validated at service layer)
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @Operation(
         summary = "Delete purchase order",
-        description = "Soft delete purchase order (sets isActive to false). Can only delete if status is CREATED"
+        description = "Soft delete purchase order (sets isActive to false). Can only delete if status is CREATED and you are the creator"
     )
     public ApiResponse<Void> deletePurchaseOrder(
             @PathVariable @Parameter(description = "Purchase Order ID") UUID id) {
@@ -102,8 +115,10 @@ public class PurchaseOrderController {
     /**
      * Get all purchase orders with pagination and sorting
      * GET /api/purchase-orders
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Get all purchase orders",
         description = "Retrieve all active purchase orders with pagination and sorting"
@@ -121,8 +136,10 @@ public class PurchaseOrderController {
     /**
      * Get purchase order by ID
      * GET /api/purchase-orders/{id}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Get purchase order by ID",
         description = "Retrieve detailed purchase order information including items and vendor details"
@@ -142,8 +159,10 @@ public class PurchaseOrderController {
     /**
      * Get purchase orders by status
      * GET /api/purchase-orders/status/{status}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Get purchase orders by status",
         description = "Filter purchase orders by status (CREATED, PENDING, APPROVED, REJECTED, CANCELLED)"
@@ -162,8 +181,10 @@ public class PurchaseOrderController {
     /**
      * Search purchase orders by PO number
      * GET /api/purchase-orders/search?keyword={keyword}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Search purchase orders",
         description = "Search purchase orders by PO number (partial match, case insensitive)"
@@ -181,11 +202,13 @@ public class PurchaseOrderController {
      * Submit purchase order for approval
      * POST /api/purchase-orders/{id}/submit
      * Changes status from CREATED to PENDING
+     * Required Role: EMPLOYEE (creator only - validated at service layer)
      */
     @PostMapping("/{id}/submit")
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @Operation(
         summary = "Submit purchase order for approval",
-        description = "Submit purchase order for approval. Changes status from CREATED to PENDING"
+        description = "Submit purchase order for approval. Changes status from CREATED to PENDING. Only creator can submit"
     )
     public ApiResponse<PurchaseOrderResponse> submitForApproval(
             @PathVariable @Parameter(description = "Purchase Order ID") UUID id) {
@@ -203,8 +226,10 @@ public class PurchaseOrderController {
      * Approve purchase order
      * POST /api/purchase-orders/{id}/approve
      * Changes status from PENDING to APPROVED
+     * Required Role: MANAGER
      */
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(
         summary = "Approve purchase order",
         description = "Approve a purchase order. Changes status from PENDING to APPROVED. Records approver and approval date"
@@ -226,8 +251,10 @@ public class PurchaseOrderController {
      * Reject purchase order
      * POST /api/purchase-orders/{id}/reject
      * Changes status from PENDING to REJECTED
+     * Required Role: MANAGER
      */
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(
         summary = "Reject purchase order",
         description = "Reject a purchase order with reason. Changes status from PENDING to REJECTED"

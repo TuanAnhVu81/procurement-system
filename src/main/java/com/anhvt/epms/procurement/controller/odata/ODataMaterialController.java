@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -34,8 +35,10 @@ public class ODataMaterialController {
     /**
      * GET /odata/Materials - Get material collection
      * OData query options: $top, $skip, $orderby, $count, $filter
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Get material collection (OData V4)",
         description = "Retrieve materials with OData query options: $top, $skip, $orderby, $count, $filter"
@@ -105,8 +108,10 @@ public class ODataMaterialController {
     
     /**
      * GET /odata/Materials/{id} - Get single material by ID
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(
         summary = "Get material by ID",
         description = "Retrieve a single material by UUID"

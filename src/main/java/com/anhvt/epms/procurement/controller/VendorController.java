@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -23,6 +24,11 @@ import java.util.UUID;
 /**
  * REST Controller for vendor management endpoints
  * Provides CRUD operations and vendor-specific features
+ * 
+ * Authorization Rules:
+ * - ADMIN: Full access (Create, Read, Update, Delete)
+ * - EMPLOYEE: Read-only access
+ * - MANAGER: Read-only access
  */
 @RestController
 @RequestMapping("/api/vendors")
@@ -35,9 +41,11 @@ public class VendorController {
     /**
      * Create a new vendor
      * POST /api/vendors
+     * Required Role: ADMIN
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create new vendor", description = "Create a new vendor with auto-generated vendor code")
     public ApiResponse<VendorResponse> createVendor(@Valid @RequestBody VendorRequest request) {
         VendorResponse response = vendorService.createVendor(request);
@@ -52,8 +60,10 @@ public class VendorController {
     /**
      * Get all vendors with pagination
      * GET /api/vendors
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get all vendors", description = "Retrieve all vendors with pagination and sorting")
     public Page<VendorResponse> getAllVendors(
             @RequestParam(defaultValue = "0") int page,
@@ -67,8 +77,10 @@ public class VendorController {
     /**
      * Get vendor by ID
      * GET /api/vendors/{id}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get vendor by ID", description = "Retrieve a specific vendor by its ID")
     public ApiResponse<VendorResponse> getVendorById(@PathVariable UUID id) {
         VendorResponse response = vendorService.getVendorById(id);
@@ -83,8 +95,10 @@ public class VendorController {
     /**
      * Search vendor by code
      * GET /api/vendors/search?code={vendorCode}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Search vendor by code", description = "Find vendor by unique vendor code")
     public ApiResponse<VendorResponse> searchVendorByCode(@RequestParam String code) {
         VendorResponse response = vendorService.getVendorByCode(code);
@@ -99,8 +113,10 @@ public class VendorController {
     /**
      * Get vendors by status
      * GET /api/vendors/status/{status}
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
      */
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
     @Operation(summary = "Get vendors by status", description = "Filter vendors by status (ACTIVE/INACTIVE)")
     public Page<VendorResponse> getVendorsByStatus(
             @PathVariable Status status,
@@ -115,8 +131,10 @@ public class VendorController {
     /**
      * Update vendor
      * PUT /api/vendors/{id}
+     * Required Role: ADMIN
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update vendor", description = "Update vendor information (vendor code cannot be changed)")
     public ApiResponse<VendorResponse> updateVendor(
             @PathVariable UUID id,
@@ -133,8 +151,10 @@ public class VendorController {
     /**
      * Update vendor rating
      * PUT /api/vendors/{id}/rating
+     * Required Role: ADMIN (System/Admin only)
      */
     @PutMapping("/{id}/rating")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update vendor rating", description = "Update vendor rating based on delivery history (1.0-5.0)")
     public ApiResponse<VendorResponse> updateVendorRating(
             @PathVariable UUID id,
@@ -151,9 +171,11 @@ public class VendorController {
     /**
      * Delete vendor (soft delete)
      * DELETE /api/vendors/{id}
+     * Required Role: ADMIN
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete vendor", description = "Soft delete vendor (sets status to INACTIVE, preserves data)")
     public ApiResponse<Void> deleteVendor(@PathVariable UUID id) {
         vendorService.deleteVendor(id);
