@@ -72,6 +72,10 @@ public class PurchaseOrder extends BaseEntity {
     @Builder.Default
     String currency = "USD";
     
+    @Column(name = "tax_rate", precision = 5, scale = 4)
+    @Builder.Default
+    BigDecimal taxRate = new BigDecimal("0.10"); // Default 10% tax rate
+    
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     String rejectionReason;
     
@@ -104,14 +108,26 @@ public class PurchaseOrder extends BaseEntity {
     }
     
     /**
-     * Recalculate total amounts based on items
+     * Recalculate total amounts based on items and tax rate
      * Called automatically when items are added or removed
+     * Formula: taxAmount = totalAmount * taxRate, grandTotal = totalAmount + taxAmount
      */
     public void recalculateTotals() {
+        // Calculate total amount from all items (filter null values for safety)
         this.totalAmount = items.stream()
             .map(PurchaseOrderItem::getNetAmount)
+            .filter(amount -> amount != null)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
+        // Calculate tax amount based on tax rate
+        if (this.taxRate != null && this.totalAmount != null) {
+            this.taxAmount = this.totalAmount.multiply(this.taxRate)
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+        } else {
+            this.taxAmount = BigDecimal.ZERO;
+        }
+        
+        // Calculate grand total
         this.grandTotal = this.totalAmount.add(this.taxAmount);
     }
     

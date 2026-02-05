@@ -58,12 +58,16 @@ public class PurchaseOrderItem extends BaseEntity {
     /**
      * Calculate net amount before persisting or updating
      * Net Amount = Quantity * Unit Price
+     * If either quantity or unitPrice is null, set netAmount to ZERO to prevent NPE
      */
     @PrePersist
     @PreUpdate
     public void calculateNetAmount() {
         if (this.quantity != null && this.unitPrice != null) {
             this.netAmount = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
+        } else {
+            // Set to ZERO if required fields are missing (safety fallback)
+            this.netAmount = BigDecimal.ZERO;
         }
     }
 }

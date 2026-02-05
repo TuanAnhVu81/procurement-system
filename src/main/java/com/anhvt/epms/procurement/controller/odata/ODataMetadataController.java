@@ -83,10 +83,38 @@ public class ODataMetadataController {
             "                <Property Name=\"UpdatedBy\" Type=\"Edm.String\"/>\n" +
             "            </EntityType>\n" +
             "            \n" +
+            "            <!-- PurchaseOrder Entity Type -->\n" +
+            "            <EntityType Name=\"PurchaseOrder\">\n" +
+            "                <Key>\n" +
+            "                    <PropertyRef Name=\"Id\"/>\n" +
+            "                </Key>\n" +
+            "                <Property Name=\"Id\" Type=\"Edm.Guid\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"PoNumber\" Type=\"Edm.String\" MaxLength=\"30\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"VendorId\" Type=\"Edm.Guid\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"VendorName\" Type=\"Edm.String\" MaxLength=\"200\"/>\n" +
+            "                <Property Name=\"OrderDate\" Type=\"Edm.Date\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"DeliveryDate\" Type=\"Edm.Date\"/>\n" +
+            "                <Property Name=\"Status\" Type=\"Edm.String\" MaxLength=\"20\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"StatusDisplay\" Type=\"Edm.String\" MaxLength=\"50\"/>\n" +
+            "                <Property Name=\"TotalAmount\" Type=\"Edm.Decimal\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"TaxRate\" Type=\"Edm.Decimal\"/>\n" +
+            "                <Property Name=\"TaxAmount\" Type=\"Edm.Decimal\"/>\n" +
+            "                <Property Name=\"GrandTotal\" Type=\"Edm.Decimal\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"Currency\" Type=\"Edm.String\" MaxLength=\"3\" Nullable=\"false\"/>\n" +
+            "                <Property Name=\"ItemCount\" Type=\"Edm.Int32\"/>\n" +
+            "                <Property Name=\"ApproverName\" Type=\"Edm.String\" MaxLength=\"100\"/>\n" +
+            "                <Property Name=\"ApprovedDate\" Type=\"Edm.Date\"/>\n" +
+            "                <Property Name=\"RejectionReason\" Type=\"Edm.String\"/>\n" +
+            "                <Property Name=\"Notes\" Type=\"Edm.String\"/>\n" +
+            "                <Property Name=\"CreatedAt\" Type=\"Edm.DateTimeOffset\"/>\n" +
+            "                <Property Name=\"CreatedBy\" Type=\"Edm.String\"/>\n" +
+            "            </EntityType>\n" +
+            "            \n" +
             "            <!-- Entity Container -->\n" +
             "            <EntityContainer Name=\"Container\">\n" +
             "                <EntitySet Name=\"Vendors\" EntityType=\"com.anhvt.epms.procurement.Vendor\"/>\n" +
             "                <EntitySet Name=\"Materials\" EntityType=\"com.anhvt.epms.procurement.Material\"/>\n" +
+            "                <EntitySet Name=\"PurchaseOrders\" EntityType=\"com.anhvt.epms.procurement.PurchaseOrder\"/>\n" +
             "            </EntityContainer>\n" +
             "            \n" +
             "        </Schema>\n" +
@@ -123,6 +151,11 @@ public class ODataMetadataController {
             "            \"name\": \"Materials\",\n" +
             "            \"kind\": \"EntitySet\",\n" +
             "            \"url\": \"Materials\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"name\": \"PurchaseOrders\",\n" +
+            "            \"kind\": \"EntitySet\",\n" +
+            "            \"url\": \"PurchaseOrders\"\n" +
             "        }\n" +
             "    ]\n" +
             "}";
