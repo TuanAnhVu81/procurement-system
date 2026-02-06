@@ -28,5 +28,3 @@ app:
       username: ${MANAGER_USERNAME:manager}
       password: ${MANAGER_PASSWORD:ChangeMeInEnv}
       email: ${MANAGER_EMAIL:manager@epms.com}
-
-

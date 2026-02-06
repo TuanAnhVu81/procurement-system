@@ -185,7 +185,18 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(user);
             log.info("Created user: {} with role: {}", username, role.getName());
         } else {
-            log.debug("User already exists: {}", username);
+            // Check if existing user has the role, if not add it
+            User existingUser = userRepository.findByUsername(username).orElseThrow();
+            boolean hasRole = existingUser.getRoles().stream()
+                    .anyMatch(r -> r.getName().equals(role.getName()));
+            
+            if (!hasRole) {
+                existingUser.addRole(role);
+                userRepository.save(existingUser);
+                log.info("Added missing role {} to existing user: {}", role.getName(), username);
+            } else {
+                log.debug("User already exists with correct role: {}", username);
+            }
         }
     }
 }

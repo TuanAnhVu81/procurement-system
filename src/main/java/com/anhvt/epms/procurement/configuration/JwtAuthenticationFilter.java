@@ -41,14 +41,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         
         // Check if header exists and starts with "Bearer "
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String jwt = null;
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } else if (request.getParameter("token") != null) {
+            // Allow token via query param for easier browser testing
+            jwt = request.getParameter("token");
+        }
+        
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract JWT token (remove "Bearer " prefix)
-        final String jwt = authHeader.substring(7);
-        
         try {
             // Extract username from token
             final String username = jwtService.extractUsername(jwt);

@@ -16,7 +16,8 @@ import org.springframework.context.annotation.Configuration;
         title = "Enterprise Procurement Management System API",
         version = "1.0",
         description = "API documentation for Procurement System"
-    )
+    ),
+    security = @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 )
 @SecurityScheme(
     name = "bearerAuth",
