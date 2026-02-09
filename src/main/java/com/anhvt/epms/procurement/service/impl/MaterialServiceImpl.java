@@ -43,25 +43,29 @@ public class MaterialServiceImpl implements MaterialService {
     @Override
     @Transactional
     public MaterialResponse createMaterial(MaterialRequest request) {
-        // Validate material code uniqueness
-        if (materialRepository.existsByMaterialCode(request.getMaterialCode())) {
-            throw new AppException(ErrorCode.MATERIAL_CODE_EXISTED);
+        // 1. Validate currency (Whitelist: USD, VND, EUR)
+        if (!isValidCurrency(request.getCurrency())) {
+            throw new AppException(ErrorCode.INVALID_CURRENCY);
         }
-        
-        // Validate base price
+
+        // 2. Validate base price (Must be > 0 and correct scale)
         if (request.getBasePrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_MATERIAL_PRICE);
         }
         
-        // Validate currency
-        if (!isValidCurrency(request.getCurrency())) {
-            throw new AppException(ErrorCode.INVALID_CURRENCY);
+        // 3. Duplicate Warning (Logic fuzzy check on description)
+        // Note: Real-world often uses a separate "Search & Compare" before Submit.
+        // Here we just log a warning if similar potentially exists for auditing.
+        // Implementation simplified for Intern scope: check if exact description exists active
+        // (Assuming we might want to prevent exact dupes or just warn)
+        if (materialRepository.existsByDescriptionIgnoreCaseAndIsActiveTrue(request.getDescription())) {
+             log.warn("Potential duplicate material created: {}", request.getDescription());
         }
-        
+
         // Map DTO to Entity using MapStruct
         Material material = materialMapper.toEntity(request);
         
-        // Auto-generate material code if not provided
+        // 4. Auto-generate material code (MAT-{Year}-{Sequence})
         if (material.getMaterialCode() == null || material.getMaterialCode().isEmpty()) {
             material.setMaterialCode(generateMaterialCode());
         }
@@ -75,26 +79,29 @@ public class MaterialServiceImpl implements MaterialService {
         log.info("Material '{}' created successfully with code: {}", 
                 savedMaterial.getDescription(), savedMaterial.getMaterialCode());
         
-        // Map Entity to Response DTO using MapStruct
         return materialMapper.toResponse(savedMaterial);
     }
     
     /**
-     * Generate unique material code in format MAT-{sequential_number}
-     * @return generated material code
+     * Generate unique material code in format MAT-{YEAR}-{SEQUENCE}
+     * Example: MAT-2024-0001
      */
     private String generateMaterialCode() {
-        // Get the count of existing materials and increment
-        long count = materialRepository.count();
-        String materialCode;
+        int year = java.time.Year.now().getValue();
+        String prefix = String.format("MAT-%d-", year);
         
-        // Loop until we find a unique code
-        do {
-            count++;
-            materialCode = String.format("MAT-%03d", count);
-        } while (materialRepository.existsByMaterialCode(materialCode));
-        
-        return materialCode;
+        return materialRepository.findTopByMaterialCodeStartingWithOrderByMaterialCodeDesc(prefix)
+                .map(material -> {
+                    String lastCode = material.getMaterialCode();
+                    try {
+                        String sequencePart = lastCode.substring(lastCode.lastIndexOf("-") + 1);
+                        int sequence = Integer.parseInt(sequencePart);
+                        return String.format("%s%05d", prefix, sequence + 1);
+                    } catch (Exception e) {
+                         return prefix + "0001";
+                    }
+                })
+                .orElse(prefix + "0001");
     }
     
     /**

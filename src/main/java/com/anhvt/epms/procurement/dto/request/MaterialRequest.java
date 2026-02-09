@@ -26,6 +26,7 @@ public class MaterialRequest {
     
     @NotNull(message = "Base price is required")
     @DecimalMin(value = "0.01", message = "Base price must be greater than 0")
+    @Digits(integer = 13, fraction = 2, message = "Base price format is invalid (max 13 integers, 2 decimals)")
     BigDecimal basePrice;
     
     @NotBlank(message = "Currency is required")

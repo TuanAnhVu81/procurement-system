@@ -58,6 +58,20 @@ public interface MaterialRepository extends JpaRepository<Material, UUID> {
      * @return list of materials in category
      */
     List<Material> findByCategory(String category);
+
+    /**
+     * Find latest material code by prefix to generate next sequence
+     * @param prefix material code prefix (e.g., MAT-2024-)
+     * @return Optional containing material with latest code
+     */
+    Optional<Material> findTopByMaterialCodeStartingWithOrderByMaterialCodeDesc(String prefix);
+
+    /**
+     * Check if material with same description exists (Simple Fuzzy Search)
+     * @param description description to check
+     * @return true if exists
+     */
+    boolean existsByDescriptionIgnoreCaseAndIsActiveTrue(String description);
     
     /**
      * Find all materials with pagination
