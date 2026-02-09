@@ -41,51 +41,62 @@ public class VendorServiceImpl implements VendorService {
     @Override
     @Transactional
     public VendorResponse createVendor(VendorRequest request) {
-        // Validate vendor code uniqueness if provided
-        if (request.getVendorCode() != null && !request.getVendorCode().isEmpty()) {
-            if (vendorRepository.existsByVendorCode(request.getVendorCode())) {
-                throw new AppException(ErrorCode.VENDOR_CODE_EXISTED);
-            }
+        // 1. Check duplicate Tax ID (Mandatory unique)
+        if (vendorRepository.existsByTaxId(request.getTaxId())) {
+            throw new AppException(ErrorCode.VENDOR_TAX_ID_EXISTED);
         }
-        
-        // Map DTO to Entity using MapStruct
+
+        // 2. Check duplicate Email (Optional warning)
+        if (request.getEmail() != null && vendorRepository.existsByEmail(request.getEmail())) {
+            log.warn("Creating vendor with existing email: {}", request.getEmail());
+        }
+
+        // Map DTO to Entity
         Vendor vendor = vendorMapper.toEntity(request);
         
-        // Auto-generate vendor code if not provided
-        if (vendor.getVendorCode() == null || vendor.getVendorCode().isEmpty()) {
-            vendor.setVendorCode(generateVendorCode());
+        // 3. Auto-generate vendor code (VEN-YYYY-NNNN)
+        // Ensure user cannot set this manually
+        vendor.setVendorCode(generateVendorCode());
+        
+        // 4. Set system default fields
+        if (vendor.getCategory() == null) {
+            vendor.setCategory(com.anhvt.epms.procurement.enums.VendorCategory.DOMESTIC);
         }
-        
-        // Set default values
         vendor.setStatus(Status.ACTIVE);
-        vendor.setRating(null); // Rating will be set later based on delivery history
+        vendor.setRating(0.0); // Default rating
         
-        // Save vendor to database
+        // Save vendor
         Vendor savedVendor = vendorRepository.save(vendor);
         
         log.info("Vendor '{}' created successfully with code: {}", 
                 savedVendor.getName(), savedVendor.getVendorCode());
         
-        // Map Entity to Response DTO using MapStruct
         return vendorMapper.toResponse(savedVendor);
     }
     
     /**
-     * Generate unique vendor code in format VEN-{sequential_number}
-     * @return generated vendor code
+     * Generate vendor code with format: VEN-{YEAR}-{SEQUENCE}
+     * Example: VEN-2025-0001
      */
     private String generateVendorCode() {
-        // Get the count of existing vendors and increment
-        long count = vendorRepository.count();
-        String vendorCode;
+        int year = java.time.Year.now().getValue();
+        String prefix = String.format("VEN-%d-", year);
         
-        // Loop until we find a unique code
-        do {
-            count++;
-            vendorCode = String.format("VEN-%03d", count);
-        } while (vendorRepository.existsByVendorCode(vendorCode));
-        
-        return vendorCode;
+        // Find latest vendor code for current year
+        return vendorRepository.findTopByVendorCodeStartingWithOrderByVendorCodeDesc(prefix)
+                .map(vendor -> {
+                    String lastCode = vendor.getVendorCode();
+                    // Extract sequence number (last 4 digits)
+                    try {
+                        String sequencePart = lastCode.substring(lastCode.lastIndexOf("-") + 1);
+                        int sequence = Integer.parseInt(sequencePart);
+                        return String.format("%s%04d", prefix, sequence + 1);
+                    } catch (Exception e) {
+                        log.warn("Failed to parse vendor code sequence: {}, falling back to 0001", lastCode);
+                        return prefix + "0001";
+                    }
+                })
+                .orElse(prefix + "0001");
     }
     
     /**

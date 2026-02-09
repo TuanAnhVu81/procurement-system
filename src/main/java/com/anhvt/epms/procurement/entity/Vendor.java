@@ -1,6 +1,7 @@
 package com.anhvt.epms.procurement.entity;
 
 import com.anhvt.epms.procurement.enums.Status;
+import com.anhvt.epms.procurement.enums.VendorCategory;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -69,6 +70,20 @@ public class Vendor extends BaseEntity {
     @Column(name = "payment_terms", length = 100)
     String paymentTerms;
     
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 20)
+    @Builder.Default
+    VendorCategory category = VendorCategory.DOMESTIC;
+
+    @Column(name = "bank_name", length = 100)
+    String bankName;
+
+    @Column(name = "bank_account", length = 50)
+    String bankAccountNumber;
+
+    @Column(name = "bank_branch", length = 100)
+    String bankBranch;
+
     @Column(name = "notes", columnDefinition = "TEXT")
     String notes;
     

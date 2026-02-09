@@ -31,6 +31,27 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
      * @return true if exists, false otherwise
      */
     boolean existsByVendorCode(String vendorCode);
+
+    /**
+     * Check if tax ID already exists
+     * @param taxId tax ID to check
+     * @return true if exists, false otherwise
+     */
+    boolean existsByTaxId(String taxId);
+
+    /**
+     * Check if email already exists
+     * @param email email to check
+     * @return true if exists, false otherwise
+     */
+    boolean existsByEmail(String email);
+
+    /**
+     * Find latest vendor code by prefix to generate next sequence
+     * @param prefix vendor code prefix (e.g., VEN-2024-)
+     * @return Optional containing vendor with latest code
+     */
+    Optional<Vendor> findTopByVendorCodeStartingWithOrderByVendorCodeDesc(String prefix);
     
     /**
      * Find all vendors by status

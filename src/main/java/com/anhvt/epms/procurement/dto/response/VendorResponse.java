@@ -26,6 +26,11 @@ public class VendorResponse {
     String taxId;
     String contactPerson;
     String paymentTerms;
+    
+    com.anhvt.epms.procurement.enums.VendorCategory category;
+    String bankName;
+    String bankAccountNumber;
+    String bankBranch;
     Double rating;
     String ratingComment;
     Status status;

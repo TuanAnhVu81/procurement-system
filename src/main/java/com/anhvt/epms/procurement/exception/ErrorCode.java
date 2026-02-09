@@ -23,6 +23,7 @@ public enum ErrorCode {
     VENDOR_NOT_FOUND(2001, "Vendor not found", HttpStatus.NOT_FOUND),
     VENDOR_CODE_EXISTED(2002, "Vendor code already exists", HttpStatus.BAD_REQUEST),
     INVALID_VENDOR_RATING(2003, "Rating must be between 1.0 and 5.0", HttpStatus.BAD_REQUEST),
+    VENDOR_TAX_ID_EXISTED(2004, "Tax ID already exists", HttpStatus.BAD_REQUEST),
     
     // Material Management error codes (2100-2199)
     MATERIAL_NOT_FOUND(2101, "Material not found", HttpStatus.NOT_FOUND),
