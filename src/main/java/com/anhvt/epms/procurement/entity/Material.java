@@ -1,5 +1,6 @@
 package com.anhvt.epms.procurement.entity;
 
+import com.anhvt.epms.procurement.enums.MaterialType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -58,6 +59,14 @@ public class Material extends BaseEntity {
     @Column(name = "specifications", columnDefinition = "TEXT")
     String specifications;
     
+    @Enumerated(EnumType.STRING)
+    @Column(name = "material_type", length = 10)
+    @Builder.Default
+    MaterialType materialType = MaterialType.HAWA; // Default: Trading Goods
+
+    @Column(name = "image_url", length = 500)
+    String imageUrl;
+
     @Column(name = "is_active")
     @Builder.Default
     Boolean isActive = true;

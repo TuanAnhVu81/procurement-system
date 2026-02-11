@@ -2,6 +2,7 @@ package com.anhvt.epms.procurement.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import com.anhvt.epms.procurement.enums.MaterialType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,6 +32,9 @@ public class MaterialResponse {
     
     String category;
     
+    MaterialType materialType;
+    String imageUrl;
+
     String manufacturer;
     
     String specifications;

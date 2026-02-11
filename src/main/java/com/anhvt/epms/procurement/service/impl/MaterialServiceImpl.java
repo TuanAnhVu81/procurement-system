@@ -70,6 +70,11 @@ public class MaterialServiceImpl implements MaterialService {
             material.setMaterialCode(generateMaterialCode());
         }
         
+        // Use default MaterialType if not provided (Trading Goods)
+        if (material.getMaterialType() == null) {
+            material.setMaterialType(com.anhvt.epms.procurement.enums.MaterialType.HAWA);
+        }
+
         // Set default values
         material.setIsActive(true);
         

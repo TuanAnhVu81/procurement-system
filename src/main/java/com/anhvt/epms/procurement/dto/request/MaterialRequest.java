@@ -41,6 +41,13 @@ public class MaterialRequest {
     
     @Size(max = 100, message = "Category must not exceed 100 characters")
     String category;
+
+    // Use specific valid values in documentation, but here we can rely on enum mapping or validator
+    // Default to HAWA (Trading Goods) if null
+    com.anhvt.epms.procurement.enums.MaterialType materialType;
+
+    @Size(max = 500, message = "Image URL must not exceed 500 characters")
+    String imageUrl;
     
     @Size(max = 100, message = "Manufacturer must not exceed 100 characters")
     String manufacturer;
