@@ -20,17 +20,29 @@ public class PurchaseOrderItemResponse {
     
     private UUID id;
     
-    // Material information (nested)
+    // Material information (nested - for reference only)
     private MaterialInfo material;
+    
+    // Snapshot fields: Frozen at PO creation time (Audit trail)
+    // These fields preserve material info even if master data changes
+    private String materialCode;
+    private String materialDescription;
+    private String unit;
     
     private Integer quantity;
     private BigDecimal unitPrice;
     private BigDecimal netAmount; // Calculated: quantity * unitPrice
+    
+    // Tax calculation at line item level
+    private BigDecimal taxRate;
+    private BigDecimal taxAmount; // Calculated: netAmount * taxRate
+    private BigDecimal lineTotal; // Calculated: netAmount + taxAmount
+    
     private Integer lineNumber;
     private String notes;
     
     /**
-     * Nested DTO for Material basic info
+     * Nested DTO for Material basic info (for reference)
      */
     @Data
     @NoArgsConstructor

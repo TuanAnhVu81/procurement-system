@@ -35,12 +35,13 @@ public class PurchaseOrderResponse {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate deliveryDate;
     
+    private String deliveryAddress;
+    
     private POStatus status;
     private String statusDisplay; // For human-readable status
     
-    // Financial information
+    // Financial information (aggregated from line items)
     private BigDecimal totalAmount;
-    private BigDecimal taxRate;
     private BigDecimal taxAmount;
     private BigDecimal grandTotal;
     private String currency;

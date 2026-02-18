@@ -61,11 +61,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         String poNumber = generatePoNumber();
         purchaseOrder.setPoNumber(poNumber);
         
-        // Set default taxRate if not provided
-        if (purchaseOrder.getTaxRate() == null) {
-            purchaseOrder.setTaxRate(new java.math.BigDecimal("0.10"));
-        }
-        
         // Process and add items
         List<PurchaseOrderItem> items = new ArrayList<>();
         for (PurchaseOrderItemRequest itemRequest : request.getItems()) {
@@ -77,9 +72,19 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             PurchaseOrderItem item = purchaseOrderMapper.mapItemRequestToEntity(itemRequest);
             item.setMaterial(material);
             
+            // SNAPSHOT: Freeze material info at PO creation time (Audit requirement)
+            item.setMaterialCode(material.getMaterialCode());
+            item.setMaterialDescription(material.getDescription());
+            item.setUnit(material.getUnit());
+            
             // Set unit price (auto-fill from material if not provided)
             if (item.getUnitPrice() == null) {
                 item.setUnitPrice(material.getBasePrice());
+            }
+            
+            // Set tax rate (default to 10% if not provided)
+            if (item.getTaxRate() == null) {
+                item.setTaxRate(new java.math.BigDecimal("0.10"));
             }
             
             item.setPurchaseOrder(purchaseOrder);
@@ -89,7 +94,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         
         purchaseOrder.setItems(items);
         
-        // Recalculate totals (taxAmount and grandTotal)
+        // Recalculate totals (aggregates from item-level calculations)
         purchaseOrder.recalculateTotals();
         
         // Save purchase order (cascade saves items)
@@ -135,8 +140,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         // Update header fields
         existingPO.setOrderDate(request.getOrderDate());
         existingPO.setDeliveryDate(request.getDeliveryDate());
+        existingPO.setDeliveryAddress(request.getDeliveryAddress());
         existingPO.setCurrency(request.getCurrency());
-        existingPO.setTaxRate(request.getTaxRate());
         existingPO.setNotes(request.getNotes());
         
         // Clear existing items and add new ones
@@ -149,9 +154,19 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             PurchaseOrderItem item = purchaseOrderMapper.mapItemRequestToEntity(itemRequest);
             item.setMaterial(material);
             
+            // SNAPSHOT: Freeze material info (even on update, preserve current state)
+            item.setMaterialCode(material.getMaterialCode());
+            item.setMaterialDescription(material.getDescription());
+            item.setUnit(material.getUnit());
+            
             // Set unit price (auto-fill from material if not provided)
             if (item.getUnitPrice() == null) {
                 item.setUnitPrice(material.getBasePrice());
+            }
+            
+            // Set tax rate (default to 10% if not provided)
+            if (item.getTaxRate() == null) {
+                item.setTaxRate(new java.math.BigDecimal("0.10"));
             }
             
             item.setPurchaseOrder(existingPO);
@@ -388,27 +403,40 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     /**
      * Generate unique PO number with format: PO-YYYY-NNNN
      * Example: PO-2026-0001, PO-2026-0002, etc.
+     * 
+     * This method ensures:
+     * - Sequential numbering within each year
+     * - Automatic reset to 0001 when year changes
+     * - Thread-safe generation (handled by DB transaction)
      */
     private String generatePoNumber() {
         int currentYear = LocalDate.now().getYear();
+        String prefix = String.format("PO-%d-", currentYear);
         
-        // Get latest PO number
-        String latestPoNumber = purchaseOrderRepository.findLatestPoNumber().orElse(null);
+        // Query for latest PO number with current year prefix
+        String searchPattern = prefix + "%";
+        Optional<String> latestPoNumber = purchaseOrderRepository.findLatestPoNumberByPrefix(searchPattern);
         
         int sequenceNumber = 1;
         
-        if (latestPoNumber != null && latestPoNumber.startsWith("PO-" + currentYear)) {
-            // Extract sequence number from latest PO
+        if (latestPoNumber.isPresent()) {
+            // Extract sequence number from latest PO (e.g., "PO-2026-0005" -> 5)
             try {
-                String sequencePart = latestPoNumber.substring(latestPoNumber.lastIndexOf("-") + 1);
+                String poNumber = latestPoNumber.get();
+                String sequencePart = poNumber.substring(poNumber.lastIndexOf("-") + 1);
                 sequenceNumber = Integer.parseInt(sequencePart) + 1;
             } catch (Exception e) {
-                log.warn("Could not parse sequence from PO number: {}, using default sequence", latestPoNumber);
+                log.warn("Could not parse sequence from PO number: {}, using default sequence 1", 
+                         latestPoNumber.get(), e);
             }
         }
         
-        // Format: PO-YYYY-NNNN
-        return String.format("PO-%d-%04d", currentYear, sequenceNumber);
+        // Format: PO-YYYY-NNNN (4-digit sequence with leading zeros)
+        String generatedPoNumber = String.format("%s%04d", prefix, sequenceNumber);
+        
+        log.debug("Generated PO number: {}", generatedPoNumber);
+        
+        return generatedPoNumber;
     }
     
     /**

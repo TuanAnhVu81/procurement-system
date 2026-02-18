@@ -37,6 +37,17 @@ public class PurchaseOrderItem extends BaseEntity {
     @JoinColumn(name = "material_id", nullable = false)
     Material material;
     
+    // Snapshot fields: Frozen at PO creation time for audit trail
+    // These fields preserve material information even if master data changes
+    @Column(name = "material_code", length = 30)
+    String materialCode; // e.g., "MAT-2026-00001"
+    
+    @Column(name = "material_description", length = 500)
+    String materialDescription; // e.g., "MacBook Pro M3 Max 16-inch"
+    
+    @Column(name = "unit", length = 20)
+    String unit; // e.g., "PCS", "KG", "Box"
+    
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     @Column(name = "quantity", nullable = false)
@@ -47,7 +58,18 @@ public class PurchaseOrderItem extends BaseEntity {
     BigDecimal unitPrice;
     
     @Column(name = "net_amount", precision = 15, scale = 2)
-    BigDecimal netAmount;
+    BigDecimal netAmount; // quantity * unitPrice
+    
+    // Tax calculation at line item level (different items may have different tax rates)
+    @Column(name = "tax_rate", precision = 5, scale = 4)
+    @Builder.Default
+    BigDecimal taxRate = new BigDecimal("0.10"); // Default 10% VAT
+    
+    @Column(name = "tax_amount", precision = 15, scale = 2)
+    BigDecimal taxAmount; // netAmount * taxRate
+    
+    @Column(name = "line_total", precision = 15, scale = 2)
+    BigDecimal lineTotal; // netAmount + taxAmount
     
     @Column(name = "line_number")
     Integer lineNumber;
@@ -56,18 +78,32 @@ public class PurchaseOrderItem extends BaseEntity {
     String notes;
     
     /**
-     * Calculate net amount before persisting or updating
-     * Net Amount = Quantity * Unit Price
-     * If either quantity or unitPrice is null, set netAmount to ZERO to prevent NPE
+     * Calculate amounts before persisting or updating
+     * Formula:
+     * - netAmount = quantity * unitPrice
+     * - taxAmount = netAmount * taxRate
+     * - lineTotal = netAmount + taxAmount
      */
     @PrePersist
     @PreUpdate
-    public void calculateNetAmount() {
+    public void calculateAmounts() {
+        // Calculate net amount
         if (this.quantity != null && this.unitPrice != null) {
-            this.netAmount = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
+            this.netAmount = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity))
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
         } else {
-            // Set to ZERO if required fields are missing (safety fallback)
             this.netAmount = BigDecimal.ZERO;
         }
+        
+        // Calculate tax amount
+        if (this.netAmount != null && this.taxRate != null) {
+            this.taxAmount = this.netAmount.multiply(this.taxRate)
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+        } else {
+            this.taxAmount = BigDecimal.ZERO;
+        }
+        
+        // Calculate line total
+        this.lineTotal = this.netAmount.add(this.taxAmount);
     }
 }

@@ -29,14 +29,12 @@ public class PurchaseOrderRequest {
     @Future(message = "Delivery date must be in the future")
     private LocalDate deliveryDate;
     
+    @Size(max = 500, message = "Delivery address cannot exceed 500 characters")
+    private String deliveryAddress;
+    
     @Size(max = 3, message = "Currency code must be 3 characters")
     @Builder.Default
     private String currency = "USD";
-    
-    @DecimalMin(value = "0.0", message = "Tax rate must be at least 0%")
-    @DecimalMax(value = "1.0", message = "Tax rate cannot exceed 100%")
-    @Builder.Default
-    private BigDecimal taxRate = new BigDecimal("0.10"); // Default 10%
     
     @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
     private String notes;

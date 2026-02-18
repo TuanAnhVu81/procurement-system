@@ -51,6 +51,9 @@ public class PurchaseOrder extends BaseEntity {
     @Column(name = "delivery_date")
     LocalDate deliveryDate;
     
+    @Column(name = "delivery_address", length = 500)
+    String deliveryAddress; // Shipping destination for goods receipt
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
@@ -71,10 +74,6 @@ public class PurchaseOrder extends BaseEntity {
     @Column(name = "currency", length = 3)
     @Builder.Default
     String currency = "USD";
-    
-    @Column(name = "tax_rate", precision = 5, scale = 4)
-    @Builder.Default
-    BigDecimal taxRate = new BigDecimal("0.10"); // Default 10% tax rate
     
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     String rejectionReason;
@@ -108,26 +107,28 @@ public class PurchaseOrder extends BaseEntity {
     }
     
     /**
-     * Recalculate total amounts based on items and tax rate
+     * Recalculate total amounts based on line items
      * Called automatically when items are added or removed
-     * Formula: taxAmount = totalAmount * taxRate, grandTotal = totalAmount + taxAmount
+     * 
+     * New Formula (Item-level tax):
+     * - totalAmount = SUM(items.netAmount)
+     * - taxAmount = SUM(items.taxAmount)
+     * - grandTotal = SUM(items.lineTotal) OR totalAmount + taxAmount
      */
     public void recalculateTotals() {
-        // Calculate total amount from all items (filter null values for safety)
+        // Calculate total net amount from all items
         this.totalAmount = items.stream()
             .map(PurchaseOrderItem::getNetAmount)
             .filter(amount -> amount != null)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        // Calculate tax amount based on tax rate
-        if (this.taxRate != null && this.totalAmount != null) {
-            this.taxAmount = this.totalAmount.multiply(this.taxRate)
-                    .setScale(2, java.math.RoundingMode.HALF_UP);
-        } else {
-            this.taxAmount = BigDecimal.ZERO;
-        }
+        // Calculate total tax amount from all items (each item may have different tax rate)
+        this.taxAmount = items.stream()
+            .map(PurchaseOrderItem::getTaxAmount)
+            .filter(amount -> amount != null)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        // Calculate grand total
+        // Calculate grand total (can also sum lineTotal directly)
         this.grandTotal = this.totalAmount.add(this.taxAmount);
     }
     

@@ -1,5 +1,6 @@
 package com.anhvt.epms.procurement.dto.request;
 
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,10 @@ public class PurchaseOrderItemRequest {
     
     @DecimalMin(value = "0.0", inclusive = false, message = "Unit price must be greater than 0")
     private BigDecimal unitPrice;
+    
+    @DecimalMin(value = "0.0", message = "Tax rate must be at least 0%")
+    @DecimalMax(value = "1.0", message = "Tax rate cannot exceed 100%")
+    private BigDecimal taxRate; // Optional, defaults to 0.10 (10%) if not provided
     
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private String notes;

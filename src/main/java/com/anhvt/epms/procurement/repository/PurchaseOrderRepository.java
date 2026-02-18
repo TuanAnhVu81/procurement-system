@@ -48,9 +48,12 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
     // Count by status
     long countByStatus(POStatus status);
     
-    // Custom query: Get latest PO number for auto-generation
-    @Query("SELECT po.poNumber FROM PurchaseOrder po ORDER BY po.createdAt DESC LIMIT 1")
-    Optional<String> findLatestPoNumber();
+    // Custom query: Get latest PO number for auto-generation (by year prefix)
+    // This ensures accurate sequence numbering when year changes
+    @Query("SELECT po.poNumber FROM PurchaseOrder po " +
+           "WHERE po.poNumber LIKE :prefix " +
+           "ORDER BY po.poNumber DESC LIMIT 1")
+    Optional<String> findLatestPoNumberByPrefix(@Param("prefix") String prefix);
     
     // Analytics: Total purchase amount by vendor
     @Query("SELECT po.vendor.id, SUM(po.grandTotal) FROM PurchaseOrder po " +
