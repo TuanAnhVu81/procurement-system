@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.AccessLevel;
 
 import java.math.BigDecimal;
 
@@ -15,50 +17,33 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MonthlyPurchaseTrendResponse {
-    
-    /**
-     * Year (e.g., 2026)
-     */
-    private Integer year;
-    
-    /**
-     * Month (1-12)
-     */
-    private Integer month;
-    
-    /**
-     * Month name (e.g., "January", "February")
-     */
-    private String monthName;
-    
-    /**
-     * Total number of POs created in this month
-     */
-    private Long totalOrders;
-    
-    /**
-     * Total number of approved POs in this month
-     */
-    private Long approvedOrders;
-    
-    /**
-     * Total purchase value (sum of approved PO grand totals)
-     */
-    private BigDecimal totalValue;
-    
-    /**
-     * Currency code
-     */
-    private String currency;
-    
-    /**
-     * Average order value
-     */
-    private BigDecimal averageOrderValue;
-    
-    /**
-     * Approval rate (percentage of approved POs)
-     */
-    private Double approvalRate;
+
+    /** Year (e.g., 2026) */
+    Integer year;
+
+    /** Month (1-12) */
+    Integer month;
+
+    /** Month name (e.g., "January", "February") */
+    String monthName;
+
+    /** Total number of POs created in this month */
+    Long totalOrders;
+
+    /** Total number of approved POs in this month */
+    Long approvedOrders;
+
+    /** Total purchase value (sum of approved PO grand totals) */
+    BigDecimal totalValue;
+
+    /** Currency code */
+    String currency;
+
+    /** Average order value */
+    BigDecimal averageOrderValue;
+
+    /** Approval rate (percentage of approved POs) */
+    Double approvalRate;
 }

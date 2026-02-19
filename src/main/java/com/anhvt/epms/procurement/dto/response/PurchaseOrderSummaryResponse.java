@@ -2,57 +2,56 @@ package com.anhvt.epms.procurement.dto.response;
 
 import com.anhvt.epms.procurement.enums.POStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Summary Response DTO for Purchase Order (compact version for lists)
- * Excludes nested items for better performance in list views
+ * Summary Response DTO for Purchase Order (compact version for list views)
+ * Excludes nested line items for better performance
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PurchaseOrderSummaryResponse {
-    
-    private UUID id;
-    private String poNumber;
-    
-    // Vendor basic info (not fully nested)
-    private UUID vendorId;
-    private String vendorName;
-    
+
+    UUID id;
+    String poNumber;
+
+    // Vendor basic info (flattened — no full nested object for summary)
+    UUID vendorId;
+    String vendorName;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate orderDate;
-    
+    LocalDate orderDate;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate deliveryDate;
-    
-    private POStatus status;
-    private String statusDisplay;
-    
+    LocalDate deliveryDate;
+
+    POStatus status;
+    String statusDisplay;
+
     // Financial summary
-    private BigDecimal grandTotal;
-    private String currency;
-    
-    // Item count instead of full items
-    private Integer itemCount;
-    
+    BigDecimal grandTotal;
+    String currency;
+
+    // Item count instead of full items list
+    Integer itemCount;
+
     // Approver info
-    private String approverName;
-    
+    String approverName;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate approvedDate;
-    
+    LocalDate approvedDate;
+
     // Audit
-    private String createdBy;
-    
+    String createdBy;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate createdAt;
+    LocalDate createdAt;
 }

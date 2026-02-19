@@ -2,10 +2,8 @@ package com.anhvt.epms.procurement.dto.response;
 
 import com.anhvt.epms.procurement.enums.POStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,54 +19,55 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PurchaseOrderResponse {
-    
-    private UUID id;
-    private String poNumber;
-    
+
+    UUID id;
+    String poNumber;
+
     // Vendor information (nested)
-    private VendorInfo vendor;
-    
+    VendorInfo vendor;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate orderDate;
-    
+    LocalDate orderDate;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate deliveryDate;
-    
-    private String deliveryAddress;
-    
-    private POStatus status;
-    private String statusDisplay; // For human-readable status
-    
+    LocalDate deliveryDate;
+
+    String deliveryAddress;
+
+    POStatus status;
+    String statusDisplay; // Human-readable status label
+
     // Financial information (aggregated from line items)
-    private BigDecimal totalAmount;
-    private BigDecimal taxAmount;
-    private BigDecimal grandTotal;
-    private String currency;
-    
-    // Items (nested)
-    private List<PurchaseOrderItemResponse> items;
-    
+    BigDecimal totalAmount;
+    BigDecimal taxAmount;
+    BigDecimal grandTotal;
+    String currency;
+
+    // Line items (full nested list)
+    List<PurchaseOrderItemResponse> items;
+
     // Approval information
-    private ApproverInfo approver;
-    
+    ApproverInfo approver;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate approvedDate;
-    
-    private String rejectionReason;
-    private String notes;
-    
+    LocalDate approvedDate;
+
+    String rejectionReason;
+    String notes;
+
     // Audit fields
-    private String createdBy;
-    
+    String createdBy;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
-    
-    private String modifiedBy;
-    
+    LocalDateTime createdAt;
+
+    String modifiedBy;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime modifiedAt;
-    
+    LocalDateTime modifiedAt;
+
     /**
      * Nested DTO for Vendor basic info
      */
@@ -76,15 +75,16 @@ public class PurchaseOrderResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class VendorInfo {
-        private UUID id;
-        private String vendorCode;
-        private String vendorName;
-        private String contactPerson;
-        private String email;
-        private String phone;
+        UUID id;
+        String vendorCode;
+        String vendorName;
+        String contactPerson;
+        String email;
+        String phone;
     }
-    
+
     /**
      * Nested DTO for Approver basic info
      */
@@ -92,10 +92,11 @@ public class PurchaseOrderResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class ApproverInfo {
-        private UUID id;
-        private String username;
-        private String fullName;
-        private String email;
+        UUID id;
+        String username;
+        String fullName;
+        String email;
     }
 }

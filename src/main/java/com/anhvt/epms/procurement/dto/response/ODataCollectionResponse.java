@@ -2,10 +2,8 @@ package com.anhvt.epms.procurement.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
@@ -17,30 +15,23 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ODataCollectionResponse<T> {
-    
-    /**
-     * OData context (metadata URL)
-     */
+
+    /** OData context (metadata URL) */
     @JsonProperty("@odata.context")
-    private String context;
-    
-    /**
-     * Total count of records (when $count=true)
-     */
+    String context;
+
+    /** Total count of records (when $count=true) */
     @JsonProperty("@odata.count")
-    private Long count;
-    
-    /**
-     * Next page link (for server-side pagination)
-     */
+    Long count;
+
+    /** Next page link (for server-side pagination) */
     @JsonProperty("@odata.nextLink")
-    private String nextLink;
-    
-    /**
-     * Collection of entities
-     */
+    String nextLink;
+
+    /** Collection of entities */
     @JsonProperty("value")
-    private List<T> value;
+    List<T> value;
 }

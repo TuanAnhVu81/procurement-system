@@ -1,59 +1,59 @@
 package com.anhvt.epms.procurement.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
  * Response DTO for Purchase Order Item (line item)
- * Contains item details with material information
+ * Contains item details with material snapshot information
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PurchaseOrderItemResponse {
-    
-    private UUID id;
-    
-    // Material information (nested - for reference only)
-    private MaterialInfo material;
-    
-    // Snapshot fields: Frozen at PO creation time (Audit trail)
-    // These fields preserve material info even if master data changes
-    private String materialCode;
-    private String materialDescription;
-    private String unit;
-    
-    private Integer quantity;
-    private BigDecimal unitPrice;
-    private BigDecimal netAmount; // Calculated: quantity * unitPrice
-    
-    // Tax calculation at line item level
-    private BigDecimal taxRate;
-    private BigDecimal taxAmount; // Calculated: netAmount * taxRate
-    private BigDecimal lineTotal; // Calculated: netAmount + taxAmount
-    
-    private Integer lineNumber;
-    private String notes;
-    
+
+    UUID id;
+
+    // Material reference (live entity link)
+    MaterialInfo material;
+
+    // Snapshot fields: Frozen at PO creation time for audit trail
+    // Preserved even if master data (Material) is updated later
+    String materialCode;
+    String materialDescription;
+    String unit;
+
+    Integer quantity;
+    BigDecimal unitPrice;
+    BigDecimal netAmount;  // Calculated: quantity * unitPrice
+
+    // Tax calculation at line item level (each item may have different tax rate)
+    BigDecimal taxRate;
+    BigDecimal taxAmount;  // Calculated: netAmount * taxRate
+    BigDecimal lineTotal;  // Calculated: netAmount + taxAmount
+
+    Integer lineNumber;
+    String notes;
+
     /**
-     * Nested DTO for Material basic info (for reference)
+     * Nested DTO for Material basic info (reference only)
      */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class MaterialInfo {
-        private UUID id;
-        private String materialCode;
-        private String materialName;
-        private String description;
-        private String unit;
-        private String category;
+        UUID id;
+        String materialCode;
+        String materialName;
+        String description;
+        String unit;
+        String category;
     }
 }

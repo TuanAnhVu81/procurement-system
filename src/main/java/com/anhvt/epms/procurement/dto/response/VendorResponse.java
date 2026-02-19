@@ -1,5 +1,6 @@
 package com.anhvt.epms.procurement.dto.response;
 
+import com.anhvt.epms.procurement.enums.VendorCategory;
 import com.anhvt.epms.procurement.enums.Status;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class VendorResponse {
-    
+
     UUID id;
     String vendorCode;
     String name;
@@ -26,8 +27,8 @@ public class VendorResponse {
     String taxId;
     String contactPerson;
     String paymentTerms;
-    
-    com.anhvt.epms.procurement.enums.VendorCategory category;
+
+    VendorCategory category;
     String bankName;
     String bankAccountNumber;
     String bankBranch;
@@ -35,7 +36,7 @@ public class VendorResponse {
     String ratingComment;
     Status status;
     String notes;
-    
+
     // Audit fields
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

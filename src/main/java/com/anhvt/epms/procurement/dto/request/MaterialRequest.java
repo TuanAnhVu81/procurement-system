@@ -1,5 +1,6 @@
 package com.anhvt.epms.procurement.dto.request;
 
+import com.anhvt.epms.procurement.enums.MaterialType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,41 +17,40 @@ import java.math.BigDecimal;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MaterialRequest {
-    
+
     @Size(max = 50, message = "Material code must not exceed 50 characters")
     String materialCode;
-    
+
     @NotBlank(message = "Description is required")
     @Size(max = 500, message = "Description must not exceed 500 characters")
     String description;
-    
+
     @NotNull(message = "Base price is required")
     @DecimalMin(value = "0.01", message = "Base price must be greater than 0")
     @Digits(integer = 13, fraction = 2, message = "Base price format is invalid (max 13 integers, 2 decimals)")
     BigDecimal basePrice;
-    
+
     @NotBlank(message = "Currency is required")
     @Pattern(regexp = "USD|VND|EUR", message = "Currency must be USD, VND, or EUR")
     @Builder.Default
     String currency = "USD";
-    
+
     @NotBlank(message = "Unit is required")
     @Size(max = 20, message = "Unit must not exceed 20 characters")
     @Builder.Default
     String unit = "PCS";
-    
+
     @Size(max = 100, message = "Category must not exceed 100 characters")
     String category;
 
-    // Use specific valid values in documentation, but here we can rely on enum mapping or validator
-    // Default to HAWA (Trading Goods) if null
-    com.anhvt.epms.procurement.enums.MaterialType materialType;
+    // Default to HAWA (Trading Goods) if null — Jackson maps string to enum automatically
+    MaterialType materialType;
 
     @Size(max = 500, message = "Image URL must not exceed 500 characters")
     String imageUrl;
-    
+
     @Size(max = 100, message = "Manufacturer must not exceed 100 characters")
     String manufacturer;
-    
+
     String specifications;
 }
