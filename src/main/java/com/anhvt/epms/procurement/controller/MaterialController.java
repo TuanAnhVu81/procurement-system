@@ -50,7 +50,7 @@ public class MaterialController {
         MaterialResponse response = materialService.createMaterial(request);
         
         return ApiResponse.<MaterialResponse>builder()
-                .code(1000)
+
                 .message("Material created successfully")
                 .result(response)
                 .build();
@@ -102,7 +102,7 @@ public class MaterialController {
         MaterialResponse response = materialService.getMaterialById(id);
         
         return ApiResponse.<MaterialResponse>builder()
-                .code(1000)
+
                 .message("Material retrieved successfully")
                 .result(response)
                 .build();
@@ -120,7 +120,7 @@ public class MaterialController {
         MaterialResponse response = materialService.getMaterialByCode(code);
         
         return ApiResponse.<MaterialResponse>builder()
-                .code(1000)
+
                 .message("Material found")
                 .result(response)
                 .build();
@@ -138,7 +138,7 @@ public class MaterialController {
         List<MaterialResponse> response = materialService.getMaterialsByUnit(unit);
         
         return ApiResponse.<List<MaterialResponse>>builder()
-                .code(1000)
+
                 .message("Materials filtered by unit successfully")
                 .result(response)
                 .build();
@@ -156,7 +156,7 @@ public class MaterialController {
         List<MaterialResponse> response = materialService.getMaterialsByCategory(category);
         
         return ApiResponse.<List<MaterialResponse>>builder()
-                .code(1000)
+
                 .message("Materials filtered by category successfully")
                 .result(response)
                 .build();
@@ -176,7 +176,7 @@ public class MaterialController {
         MaterialResponse response = materialService.updateMaterial(id, request);
         
         return ApiResponse.<MaterialResponse>builder()
-                .code(1000)
+
                 .message("Material updated successfully")
                 .result(response)
                 .build();
@@ -195,7 +195,7 @@ public class MaterialController {
         materialService.deleteMaterial(id);
         
         return ApiResponse.<Void>builder()
-                .code(1000)
+
                 .message("Material deleted successfully")
                 .build();
     }

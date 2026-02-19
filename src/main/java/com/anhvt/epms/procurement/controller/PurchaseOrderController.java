@@ -59,7 +59,7 @@ public class PurchaseOrderController {
         PurchaseOrderResponse response = purchaseOrderService.createPurchaseOrder(request);
         
         return ApiResponse.<PurchaseOrderResponse>builder()
-                .code(1000)
+
                 .message("Purchase order created successfully with PO number: " + response.getPoNumber())
                 .result(response)
                 .build();
@@ -83,7 +83,7 @@ public class PurchaseOrderController {
         PurchaseOrderResponse response = purchaseOrderService.updatePurchaseOrder(id, request);
         
         return ApiResponse.<PurchaseOrderResponse>builder()
-                .code(1000)
+
                 .message("Purchase order updated successfully")
                 .result(response)
                 .build();
@@ -107,7 +107,7 @@ public class PurchaseOrderController {
         purchaseOrderService.deletePurchaseOrder(id);
         
         return ApiResponse.<Void>builder()
-                .code(1000)
+
                 .message("Purchase order deleted successfully")
                 .build();
     }
@@ -150,7 +150,7 @@ public class PurchaseOrderController {
         PurchaseOrderResponse response = purchaseOrderService.getPurchaseOrderById(id);
         
         return ApiResponse.<PurchaseOrderResponse>builder()
-                .code(1000)
+
                 .message("Purchase order retrieved successfully")
                 .result(response)
                 .build();
@@ -216,7 +216,7 @@ public class PurchaseOrderController {
         PurchaseOrderResponse response = purchaseOrderService.submitForApproval(id);
         
         return ApiResponse.<PurchaseOrderResponse>builder()
-                .code(1000)
+
                 .message("Purchase order submitted for approval successfully")
                 .result(response)
                 .build();
@@ -241,7 +241,7 @@ public class PurchaseOrderController {
         PurchaseOrderResponse response = purchaseOrderService.approvePurchaseOrder(id);
         
         return ApiResponse.<PurchaseOrderResponse>builder()
-                .code(1000)
+
                 .message("Purchase order approved successfully")
                 .result(response)
                 .build();
@@ -270,7 +270,7 @@ public class PurchaseOrderController {
         PurchaseOrderResponse response = purchaseOrderService.rejectPurchaseOrder(id, rejectionReason);
         
         return ApiResponse.<PurchaseOrderResponse>builder()
-                .code(1000)
+
                 .message("Purchase order rejected successfully")
                 .result(response)
                 .build();

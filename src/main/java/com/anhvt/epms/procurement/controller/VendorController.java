@@ -51,7 +51,7 @@ public class VendorController {
         VendorResponse response = vendorService.createVendor(request);
         
         return ApiResponse.<VendorResponse>builder()
-                .code(1000)
+
                 .message("Vendor created successfully")
                 .result(response)
                 .build();
@@ -86,7 +86,7 @@ public class VendorController {
         VendorResponse response = vendorService.getVendorById(id);
         
         return ApiResponse.<VendorResponse>builder()
-                .code(1000)
+
                 .message("Vendor retrieved successfully")
                 .result(response)
                 .build();
@@ -104,7 +104,7 @@ public class VendorController {
         VendorResponse response = vendorService.getVendorByCode(code);
         
         return ApiResponse.<VendorResponse>builder()
-                .code(1000)
+
                 .message("Vendor found")
                 .result(response)
                 .build();
@@ -142,7 +142,7 @@ public class VendorController {
         VendorResponse response = vendorService.updateVendor(id, request);
         
         return ApiResponse.<VendorResponse>builder()
-                .code(1000)
+
                 .message("Vendor updated successfully")
                 .result(response)
                 .build();
@@ -162,7 +162,7 @@ public class VendorController {
         VendorResponse response = vendorService.updateVendorRating(id, request);
         
         return ApiResponse.<VendorResponse>builder()
-                .code(1000)
+
                 .message("Vendor rating updated successfully")
                 .result(response)
                 .build();
@@ -181,7 +181,7 @@ public class VendorController {
         vendorService.deleteVendor(id);
         
         return ApiResponse.<Void>builder()
-                .code(1000)
+
                 .message("Vendor deleted successfully")
                 .build();
     }

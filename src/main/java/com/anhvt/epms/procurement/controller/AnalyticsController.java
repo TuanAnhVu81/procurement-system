@@ -56,7 +56,7 @@ public class AnalyticsController {
         List<POStatusSummaryResponse> summary = analyticsService.getPOStatusSummary();
         
         return ApiResponse.<List<POStatusSummaryResponse>>builder()
-                .code(1000)
+
                 .message("PO status summary retrieved successfully")
                 .result(summary)
                 .build();
@@ -89,7 +89,7 @@ public class AnalyticsController {
         List<TopVendorResponse> topVendors = analyticsService.getTopVendorsByPurchaseValue(limit);
         
         return ApiResponse.<List<TopVendorResponse>>builder()
-                .code(1000)
+
                 .message(String.format("Top %d vendors retrieved successfully", topVendors.size()))
                 .result(topVendors)
                 .build();
@@ -128,7 +128,7 @@ public class AnalyticsController {
         List<MonthlyPurchaseTrendResponse> trend = analyticsService.getMonthlyPurchaseTrend(startDate, endDate);
         
         return ApiResponse.<List<MonthlyPurchaseTrendResponse>>builder()
-                .code(1000)
+
                 .message("Monthly purchase trend retrieved successfully")
                 .result(trend)
                 .build();
@@ -161,7 +161,7 @@ public class AnalyticsController {
         List<MonthlyPurchaseTrendResponse> trend = analyticsService.getRecentMonthlyTrend(months);
         
         return ApiResponse.<List<MonthlyPurchaseTrendResponse>>builder()
-                .code(1000)
+
                 .message(String.format("Recent %d months trend retrieved successfully", months))
                 .result(trend)
                 .build();
@@ -197,7 +197,7 @@ public class AnalyticsController {
                 .build();
         
         return ApiResponse.<DashboardAnalytics>builder()
-                .code(1000)
+
                 .message("Dashboard analytics retrieved successfully")
                 .result(dashboard)
                 .build();

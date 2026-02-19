@@ -47,7 +47,7 @@ public class AuthenticationController {
         UserResponse response = userService.register(request);
         
         return ApiResponse.<UserResponse>builder()
-                .code(1000)
+
                 .message("User registered successfully")
                 .result(response)
                 .build();
@@ -64,7 +64,7 @@ public class AuthenticationController {
         AuthenticationResponse response = authenticationService.login(request);
         
         return ApiResponse.<AuthenticationResponse>builder()
-                .code(1000)
+
                 .message("Login successful")
                 .result(response)
                 .build();
