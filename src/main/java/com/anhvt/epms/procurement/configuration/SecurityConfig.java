@@ -17,6 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * Security Configuration for JWT-based stateless authentication
@@ -38,6 +43,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // Enable CORS using the corsConfigurationSource bean below
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
@@ -59,6 +66,38 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    /**
+     * CORS configuration: allow requests from React dev server and Vercel production
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        // Allow React Vite dev server (local) and Vercel (production)
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "https://epms-frontend.vercel.app"
+        ));
+
+        // Allow standard HTTP methods
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // Allow all headers including Authorization (for JWT)
+        config.setAllowedHeaders(List.of("*"));
+
+        // Allow credentials (needed if using cookies; safe to keep even with Bearer token)
+        config.setAllowCredentials(true);
+
+        // Cache preflight response for 1 hour (reduces OPTIONS requests)
+        config.setMaxAge(3600L);
+
+        // Apply CORS config to all endpoints
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     /**
