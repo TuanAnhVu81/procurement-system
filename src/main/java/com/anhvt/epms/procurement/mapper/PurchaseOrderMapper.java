@@ -35,7 +35,7 @@ public class PurchaseOrderMapper implements BaseMapper {
                 .status(entity.getStatus())
                 .statusDisplay(entity.getStatus() != null ? entity.getStatus().getDisplayName() : null)
                 .totalAmount(entity.getTotalAmount())
-                .taxRate(entity.getTaxRate())
+                // taxRate is item-level field (PurchaseOrderItem), not on PO header entity
                 .taxAmount(entity.getTaxAmount())
                 .grandTotal(entity.getGrandTotal())
                 .currency(entity.getCurrency())
@@ -91,7 +91,7 @@ public class PurchaseOrderMapper implements BaseMapper {
                 .orderDate(request.getOrderDate())
                 .deliveryDate(request.getDeliveryDate())
                 .currency(request.getCurrency())
-                .taxRate(request.getTaxRate())
+                // taxRate is item-level: each PurchaseOrderItem has its own taxRate field
                 .notes(request.getNotes())
                 .build();
         
