@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
             log.warn("Registration failed: Email '{}' already exists", request.getEmail());
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
         // Map DTO to Entity using MapStruct
