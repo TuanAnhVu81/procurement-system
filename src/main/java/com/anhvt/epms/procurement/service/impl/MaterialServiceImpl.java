@@ -66,9 +66,8 @@ public class MaterialServiceImpl implements MaterialService {
         Material material = materialMapper.toEntity(request);
         
         // 4. Auto-generate material code (MAT-{Year}-{Sequence})
-        if (material.getMaterialCode() == null || material.getMaterialCode().isEmpty()) {
-            material.setMaterialCode(generateMaterialCode());
-        }
+        // Note: materialCode is always ignored in mapper — must be set here
+        material.setMaterialCode(generateMaterialCode());
         
         // Use default MaterialType if not provided (Trading Goods)
         if (material.getMaterialType() == null) {
@@ -95,18 +94,27 @@ public class MaterialServiceImpl implements MaterialService {
         int year = java.time.Year.now().getValue();
         String prefix = String.format("MAT-%d-", year);
         
-        return materialRepository.findTopByMaterialCodeStartingWithOrderByMaterialCodeDesc(prefix)
+        String nextCode = materialRepository.findTopByMaterialCodeStartingWithOrderByMaterialCodeDesc(prefix)
                 .map(material -> {
                     String lastCode = material.getMaterialCode();
                     try {
                         String sequencePart = lastCode.substring(lastCode.lastIndexOf("-") + 1);
                         int sequence = Integer.parseInt(sequencePart);
-                        return String.format("%s%05d", prefix, sequence + 1);
+                        return String.format("%s%04d", prefix, sequence + 1);
                     } catch (Exception e) {
                          return prefix + "0001";
                     }
                 })
                 .orElse(prefix + "0001");
+                
+        // Robust check: Ensure duplicate is skipped if any weird manual entries exist
+        while (materialRepository.existsByMaterialCode(nextCode)) {
+            String sequencePart = nextCode.substring(nextCode.lastIndexOf("-") + 1);
+            int sequence = Integer.parseInt(sequencePart);
+            nextCode = String.format("%s%04d", prefix, sequence + 1);
+        }
+        
+        return nextCode;
     }
     
     /**

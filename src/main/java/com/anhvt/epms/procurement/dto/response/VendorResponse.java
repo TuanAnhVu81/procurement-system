@@ -29,6 +29,7 @@ public class VendorResponse {
     String paymentTerms;
 
     VendorCategory category;
+    String categoryDisplay; // Human-readable label (e.g., "Nhà cung cấp trong nước")
     String bankName;
     String bankAccountNumber;
     String bankBranch;

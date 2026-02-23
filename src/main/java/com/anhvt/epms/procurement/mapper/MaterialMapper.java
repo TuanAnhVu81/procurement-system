@@ -22,7 +22,8 @@ public interface MaterialMapper extends BaseMapper {
      * @param request material request DTO
      * @return Material entity
      */
-    @Mapping(target = "isActive", ignore = true)
+    @Mapping(target = "materialCode", ignore = true) // Auto-generated in service layer, user input ignored
+    @Mapping(target = "isActive", ignore = true)    // Always set to true on create by service
     @Mapping(target = "stock", ignore = true)
     @Mapping(target = "purchaseOrderItems", ignore = true)
     Material toEntity(MaterialRequest request);
@@ -32,6 +33,7 @@ public interface MaterialMapper extends BaseMapper {
      * @param material material entity
      * @return MaterialResponse DTO
      */
+    @Mapping(target = "materialTypeDisplay", expression = "java(material.getMaterialType() != null ? material.getMaterialType().getDisplayName() : null)")
     MaterialResponse toResponse(Material material);
     
     /**

@@ -33,6 +33,7 @@ public class MaterialResponse {
     String category;
     
     MaterialType materialType;
+    String materialTypeDisplay; // Human-readable label (e.g., "Hàng hóa thương mại")
     String imageUrl;
 
     String manufacturer;

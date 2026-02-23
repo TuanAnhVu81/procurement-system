@@ -22,10 +22,12 @@ public interface VendorMapper extends BaseMapper {
      * @param request vendor request DTO
      * @return Vendor entity
      */
+    @Mapping(target = "vendorCode", ignore = true)  // Auto-generated in service, cannot be set by user
     @Mapping(target = "rating", ignore = true)
     @Mapping(target = "ratingComment", ignore = true) // Handled via updateRating API
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "purchaseOrders", ignore = true)
+    @Mapping(target = "bankAccountNumber", source = "bankAccountNumber") // Explicit: field name differs from DB column name
     Vendor toEntity(VendorRequest request);
     
     /**
@@ -33,6 +35,7 @@ public interface VendorMapper extends BaseMapper {
      * @param vendor vendor entity
      * @return VendorResponse DTO
      */
+    @Mapping(target = "categoryDisplay", expression = "java(vendor.getCategory() != null ? vendor.getCategory().getDisplayName() : null)")
     VendorResponse toResponse(Vendor vendor);
     
     /**
