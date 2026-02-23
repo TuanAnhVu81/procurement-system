@@ -162,27 +162,25 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .filter(po -> !po.getOrderDate().isBefore(startDate) && !po.getOrderDate().isAfter(endDate))
                 .collect(Collectors.toList());
         
-        // Group by year-month
-        Map<String, List<PurchaseOrder>> groupedByMonth = allPOs.stream()
-                .collect(Collectors.groupingBy(po -> 
-                    po.getOrderDate().getYear() + "-" + String.format("%02d", po.getOrderDate().getMonthValue())
-                ));
+        // Group by specific Date (YYYY-MM-DD)
+        Map<String, List<PurchaseOrder>> groupedByDate = allPOs.stream()
+                .collect(Collectors.groupingBy(po -> po.getOrderDate().toString()));
         
         // Build monthly trend responses
         List<MonthlyPurchaseTrendResponse> trends = new ArrayList<>();
         
-        for (Map.Entry<String, List<PurchaseOrder>> entry : groupedByMonth.entrySet()) {
-            String yearMonth = entry.getKey();
+        for (Map.Entry<String, List<PurchaseOrder>> entry : groupedByDate.entrySet()) {
+            String dateStr = entry.getKey();
             List<PurchaseOrder> monthPOs = entry.getValue();
             
-            // Parse year and month
-            String[] parts = yearMonth.split("-");
+            // Parse date elements
+            String[] parts = dateStr.split("-");
             int year = Integer.parseInt(parts[0]);
             int month = Integer.parseInt(parts[1]);
+            int day = Integer.parseInt(parts[2]);
             
-            // Get month name
-            LocalDate sampleDate = LocalDate.of(year, month, 1);
-            String monthName = sampleDate.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+            // Use monthName field to store 'DD/MM' display value
+            String monthName = String.format("%02d/%02d", day, month);
             
             // Calculate statistics
             long totalOrders = monthPOs.size();
@@ -220,9 +218,10 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             trends.add(trend);
         }
         
-        // Sort by year and month
+        // Sort chronologically (Year -> Month -> Day)
         trends.sort(Comparator.comparing(MonthlyPurchaseTrendResponse::getYear)
-                .thenComparing(MonthlyPurchaseTrendResponse::getMonth));
+                .thenComparing(MonthlyPurchaseTrendResponse::getMonth)
+                .thenComparing(t -> Integer.parseInt(t.getMonthName().split("/")[0])));
         
         log.info("Generated monthly trend with {} months", trends.size());
         return trends;
@@ -233,11 +232,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<MonthlyPurchaseTrendResponse> getRecentMonthlyTrend(int months) {
-        log.info("Generating recent monthly trend for last {} months", months);
+    public List<MonthlyPurchaseTrendResponse> getRecentMonthlyTrend(int days) {
+        log.info("Generating recent daily trend for last {} days", days);
         
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusMonths(months);
+        LocalDate startDate = endDate.minusDays(14); // default to 14 days instead of months
         
         return getMonthlyPurchaseTrend(startDate, endDate);
     }
