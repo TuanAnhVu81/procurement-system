@@ -203,7 +203,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         // Check ownership
         User currentUser = getCurrentUser();
         // Allow Admin to delete any PO, or Creator to delete their own
-        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ADMIN"));
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
         String createdBy = purchaseOrder.getCreatedBy();
         
         if (!isAdmin && (createdBy == null || !createdBy.equals(currentUser.getUsername()))) {
@@ -234,7 +234,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         User currentUser = getCurrentUser();
         
         boolean isManagerOrAdmin = currentUser.getRoles().stream()
-                .anyMatch(r -> r.getName().equals("MANAGER") || r.getName().equals("ADMIN"));
+                .anyMatch(r -> r.getName().equals("ROLE_MANAGER") || r.getName().equals("ROLE_ADMIN"));
         
         Page<PurchaseOrder> purchaseOrders;
         
@@ -263,7 +263,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         // Check Data Scope for viewing details
         User currentUser = getCurrentUser();
         boolean isManagerOrAdmin = currentUser.getRoles().stream()
-                .anyMatch(r -> r.getName().equals("MANAGER") || r.getName().equals("ADMIN"));
+                .anyMatch(r -> r.getName().equals("ROLE_MANAGER") || r.getName().equals("ROLE_ADMIN"));
         
         String createdBy = purchaseOrder.getCreatedBy();
         if (!isManagerOrAdmin && (createdBy == null || !createdBy.equals(currentUser.getUsername()))) {
@@ -284,7 +284,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         // Check Data Scope
         User currentUser = getCurrentUser();
         boolean isManagerOrAdmin = currentUser.getRoles().stream()
-                .anyMatch(r -> r.getName().equals("MANAGER") || r.getName().equals("ADMIN"));
+                .anyMatch(r -> r.getName().equals("ROLE_MANAGER") || r.getName().equals("ROLE_ADMIN"));
                 
         Page<PurchaseOrder> purchaseOrders;
         if (isManagerOrAdmin) {
