@@ -89,6 +89,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             }
             
             item.setPurchaseOrder(purchaseOrder);
+            // Explicitly calculate item amounts here so PO totals can be recalculated accurately below
+            item.calculateAmounts();
             
             items.add(item);
         }
@@ -171,6 +173,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             }
             
             item.setPurchaseOrder(existingPO);
+            // Explicitly calculate item amounts here so PO totals can be recalculated accurately below
+            item.calculateAmounts();
             
             existingPO.getItems().add(item);
         }
