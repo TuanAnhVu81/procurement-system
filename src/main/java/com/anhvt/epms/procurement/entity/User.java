@@ -54,6 +54,10 @@ public class User extends BaseEntity {
     @Builder.Default
     Status status = Status.ACTIVE;
     
+    @Column(name = "require_password_change", nullable = false)
+    @Builder.Default
+    boolean requirePasswordChange = false;
+    
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",

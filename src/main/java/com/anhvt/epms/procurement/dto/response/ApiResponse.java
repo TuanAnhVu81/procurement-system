@@ -22,4 +22,12 @@ public class ApiResponse<T> {
     String message;
     
     T result;
+    
+    public static <T> ApiResponse<T> success(T result, String message) {
+        return ApiResponse.<T>builder()
+                .code(1000)
+                .message(message)
+                .result(result)
+                .build();
+    }
 }

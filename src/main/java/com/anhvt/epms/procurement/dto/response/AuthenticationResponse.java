@@ -16,4 +16,6 @@ public class AuthenticationResponse {
     String token;
     
     Long expiresIn;
+    
+    boolean requirePasswordChange;
 }

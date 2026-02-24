@@ -12,7 +12,7 @@ import java.util.UUID;
  * Provides database access methods for user operations
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<User, UUID>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<User> {
     
     /**
      * Find user by username

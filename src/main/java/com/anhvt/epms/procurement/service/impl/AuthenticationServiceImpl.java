@@ -70,6 +70,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return AuthenticationResponse.builder()
                     .token(token)
                     .expiresIn(jwtExpiration)
+                    .requirePasswordChange(user.isRequirePasswordChange())
                     .build();
 
         } catch (org.springframework.security.core.AuthenticationException e) {
