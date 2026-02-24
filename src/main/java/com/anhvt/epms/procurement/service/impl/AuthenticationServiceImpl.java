@@ -53,6 +53,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User user = userRepository.findByUsername(request.getUsername())
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
+            // CASE-SENSITIVE FIX: Explicitly check for exact username match 
+            // MySQL is case-insensitive by default, so we must verify in Java
+            if (!user.getUsername().equals(request.getUsername())) {
+                log.warn("Login denied: Username case mismatch. Provided: '{}', Stored: '{}'", 
+                        request.getUsername(), user.getUsername());
+                throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+            }
+
             // Generate JWT token
             String token = jwtService.generateToken(user);
 
@@ -64,8 +72,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .expiresIn(jwtExpiration)
                     .build();
 
-        } catch (BadCredentialsException e) {
-            log.error("Invalid credentials for user '{}'", request.getUsername());
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            log.error("Authentication failed for user '{}': {}", request.getUsername(), e.getMessage());
             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         }
     }

@@ -1,4 +1,4 @@
-package com.anhvt.epms.procurement.service;
+package com.anhvt.epms.procurement.service.impl;
 
 import com.anhvt.epms.procurement.entity.User;
 import com.anhvt.epms.procurement.exception.AppException;
@@ -34,7 +34,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        // CASE-SENSITIVE FIX: Explicitly check for exact username match
+        if (!user.getUsername().equals(username)) {
+            throw new UsernameNotFoundException("User not found (case mismatch): " + username);
+        }
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
