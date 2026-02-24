@@ -49,6 +49,9 @@ public class JwtServiceImpl implements JwtService {
                 .map(role -> role.getName())
                 .toList());
         
+        // Add requirePasswordChange flag to force first-time login users to change default password
+        claims.put("requirePasswordChange", user.isRequirePasswordChange());
+        
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getUsername())
