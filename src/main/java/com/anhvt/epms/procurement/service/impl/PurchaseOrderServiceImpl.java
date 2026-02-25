@@ -9,6 +9,7 @@ import com.anhvt.epms.procurement.enums.POStatus;
 import com.anhvt.epms.procurement.exception.ResourceNotFoundException;
 import com.anhvt.epms.procurement.mapper.PurchaseOrderMapper;
 import com.anhvt.epms.procurement.repository.*;
+import com.anhvt.epms.procurement.service.MaterialStockService;
 import com.anhvt.epms.procurement.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final MaterialRepository materialRepository;
     private final UserRepository userRepository;
     private final PurchaseOrderMapper purchaseOrderMapper;
+    // Injected to trigger stock update when goods are received (GR step)
+    private final MaterialStockService materialStockService;
     
     /**
      * Create a new purchase order with auto-generated PO number
@@ -451,5 +454,37 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Current user not found"));
+    }
+
+    /**
+     * Confirm Goods Receipt for an approved PO
+     * Status: APPROVED -> RECEIVED
+     * Triggers MaterialStockService to update quantityOnHand for each item
+     */
+    @Override
+    @Transactional
+    public PurchaseOrderResponse receivePurchaseOrder(UUID id) {
+        log.info("Processing Goods Receipt for PO ID: {}", id);
+
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Order not found with ID: " + id));
+
+        // Only APPROVED POs can be received (GR step)
+        if (purchaseOrder.getStatus() != POStatus.APPROVED) {
+            throw new IllegalStateException(
+                    "Cannot receive Purchase Order with status: " + purchaseOrder.getStatus() +
+                    ". Only APPROVED orders can be received.");
+        }
+
+        // Delegate stock update logic to MaterialStockService
+        materialStockService.processGoodsReceipt(purchaseOrder);
+
+        // Transition PO to final RECEIVED state
+        purchaseOrder.setStatus(POStatus.RECEIVED);
+        PurchaseOrder updatedPO = purchaseOrderRepository.save(purchaseOrder);
+
+        log.info("Purchase order received: {}. Stock has been updated.", updatedPO.getPoNumber());
+
+        return purchaseOrderMapper.toResponse(updatedPO);
     }
 }

@@ -12,7 +12,8 @@ public enum POStatus {
     PENDING("Pending Approval", "Purchase order is awaiting approval"),
     APPROVED("Approved", "Purchase order has been approved"),
     REJECTED("Rejected", "Purchase order has been rejected"),
-    CANCELLED("Cancelled", "Purchase order has been cancelled");
+    CANCELLED("Cancelled", "Purchase order has been cancelled"),
+    RECEIVED("Received", "Goods have been received and stock has been updated");
     
     private final String displayName;
     private final String description;

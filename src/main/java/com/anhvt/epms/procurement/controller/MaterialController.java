@@ -3,7 +3,9 @@ package com.anhvt.epms.procurement.controller;
 import com.anhvt.epms.procurement.dto.request.MaterialRequest;
 import com.anhvt.epms.procurement.dto.response.ApiResponse;
 import com.anhvt.epms.procurement.dto.response.MaterialResponse;
+import com.anhvt.epms.procurement.dto.response.MaterialStockResponse;
 import com.anhvt.epms.procurement.service.MaterialService;
+import com.anhvt.epms.procurement.service.MaterialStockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,6 +38,8 @@ import java.util.UUID;
 public class MaterialController {
     
     private final MaterialService materialService;
+    // Injected to expose stock endpoints from the same base URL
+    private final MaterialStockService materialStockService;
     
     /**
      * Create a new material
@@ -197,6 +201,38 @@ public class MaterialController {
         return ApiResponse.<Void>builder()
 
                 .message("Material deleted successfully")
+                .build();
+    }
+
+    /**
+     * Get stock level for a specific material
+     * GET /api/materials/{id}/stock
+     * Required Role: ADMIN, EMPLOYEE, MANAGER
+     */
+    @GetMapping("/{id}/stock")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
+    @Operation(summary = "Get material stock level", description = "Get current inventory level for a specific material")
+    public ApiResponse<MaterialStockResponse> getMaterialStock(@PathVariable UUID id) {
+        MaterialStockResponse response = materialStockService.getStockByMaterialId(id);
+        return ApiResponse.<MaterialStockResponse>builder()
+                .message("Stock retrieved successfully")
+                .result(response)
+                .build();
+    }
+
+    /**
+     * Get all materials below minimum stock level (Low-stock warning)
+     * GET /api/materials/stock/low
+     * Required Role: ADMIN, MANAGER
+     */
+    @GetMapping("/stock/low")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Get low-stock materials", description = "List all materials with quantity below their minimum stock level")
+    public ApiResponse<List<MaterialStockResponse>> getLowStockMaterials() {
+        List<MaterialStockResponse> response = materialStockService.getLowStockMaterials();
+        return ApiResponse.<List<MaterialStockResponse>>builder()
+                .message("Low-stock materials retrieved successfully")
+                .result(response)
                 .build();
     }
 }

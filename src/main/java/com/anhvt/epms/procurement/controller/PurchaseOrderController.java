@@ -275,4 +275,30 @@ public class PurchaseOrderController {
                 .result(response)
                 .build();
     }
+
+    /**
+     * Confirm Goods Receipt (GR) for an approved purchase order
+     * POST /api/purchase-orders/{id}/receive
+     * Changes status from APPROVED to RECEIVED
+     * Triggers MaterialStock update for all line items
+     * Required Role: EMPLOYEE
+     */
+    @PostMapping("/{id}/receive")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(
+        summary = "Confirm goods received",
+        description = "Warehouse staff confirms that goods have physically arrived. " +
+                      "Changes status from APPROVED to RECEIVED and automatically updates MaterialStock " +
+                      "(quantityOnHand += received quantity). Emits low-stock warning if stock falls below minimum."
+    )
+    public ApiResponse<PurchaseOrderResponse> receivePurchaseOrder(
+            @PathVariable @Parameter(description = "Purchase Order ID") UUID id) {
+
+        PurchaseOrderResponse response = purchaseOrderService.receivePurchaseOrder(id);
+
+        return ApiResponse.<PurchaseOrderResponse>builder()
+                .message("Goods receipt confirmed. Stock has been updated for PO: " + response.getPoNumber())
+                .result(response)
+                .build();
+    }
 }

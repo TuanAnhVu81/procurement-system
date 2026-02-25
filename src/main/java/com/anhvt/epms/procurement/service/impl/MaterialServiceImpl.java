@@ -227,8 +227,12 @@ public class MaterialServiceImpl implements MaterialService {
         }
         
         // Update entity from request using MapStruct
-        // Note: materialCode and isActive are ignored in the mapper
         materialMapper.updateEntityFromRequest(material, request);
+        
+        // Manual update for fields potentially ignored or needing specific logic
+        if (request.getIsActive() != null) {
+            material.setIsActive(request.getIsActive());
+        }
         
         // Save updated material
         Material updatedMaterial = materialRepository.save(material);

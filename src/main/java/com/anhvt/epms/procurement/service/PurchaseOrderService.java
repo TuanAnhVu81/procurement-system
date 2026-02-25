@@ -106,4 +106,14 @@ public interface PurchaseOrderService {
      * @return Rejected purchase order
      */
     PurchaseOrderResponse rejectPurchaseOrder(UUID id, String rejectionReason);
+
+    /**
+     * Confirm goods received for an approved purchase order (Goods Receipt - GR)
+     * Changes status from APPROVED to RECEIVED
+     * Triggers MaterialStockService to update inventory for each line item
+     *
+     * @param id Purchase order ID
+     * @return Updated purchase order with RECEIVED status
+     */
+    PurchaseOrderResponse receivePurchaseOrder(UUID id);
 }

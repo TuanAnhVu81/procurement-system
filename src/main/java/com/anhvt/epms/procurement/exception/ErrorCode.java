@@ -31,6 +31,12 @@ public enum ErrorCode {
     MATERIAL_CODE_EXISTED(2102, "Material code already exists", HttpStatus.BAD_REQUEST),
     INVALID_MATERIAL_PRICE(2103, "Base price must be greater than 0", HttpStatus.BAD_REQUEST),
     INVALID_CURRENCY(2104, "Currency must be USD, VND, or EUR", HttpStatus.BAD_REQUEST),
+    MATERIAL_STOCK_NOT_FOUND(2105, "Material stock record not found", HttpStatus.NOT_FOUND),
+
+    // Purchase Order error codes (3000-3099)
+    PURCHASE_ORDER_NOT_FOUND(3001, "Purchase order not found", HttpStatus.NOT_FOUND),
+    PURCHASE_ORDER_INVALID_STATUS(3002, "Operation not permitted for current PO status", HttpStatus.BAD_REQUEST),
+    PURCHASE_ORDER_ACCESS_DENIED(3003, "You are not allowed to perform this action on this purchase order", HttpStatus.FORBIDDEN),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

@@ -53,4 +53,7 @@ public class MaterialRequest {
     String manufacturer;
 
     String specifications;
+
+    @Builder.Default
+    Boolean isActive = true;
 }
