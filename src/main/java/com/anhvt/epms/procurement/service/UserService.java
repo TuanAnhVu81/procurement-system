@@ -1,7 +1,13 @@
 package com.anhvt.epms.procurement.service;
 
+import com.anhvt.epms.procurement.dto.request.CreateUserRequest;
 import com.anhvt.epms.procurement.dto.request.RegisterRequest;
+import com.anhvt.epms.procurement.dto.request.UpdateUserRequest;
 import com.anhvt.epms.procurement.dto.response.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.UUID;
 
 /**
  * Service interface for user management operations
@@ -15,17 +21,54 @@ public interface UserService {
      */
     UserResponse register(RegisterRequest request);
 
-    org.springframework.data.domain.Page<UserResponse> getAllUsers(String role, Boolean status, org.springframework.data.domain.Pageable pageable);
+    /**
+     * Get all users with optional filtering and pagination
+     * @param role User role name to filter by
+     * @param status User status to filter by (true = active, false = inactive)
+     * @param pageable Pagination and sorting information
+     * @return Page of user responses
+     */
+    Page<UserResponse> getAllUsers(String role, Boolean status, Pageable pageable);
 
-    UserResponse getUserById(java.util.UUID id);
+    /**
+     * Get user details by ID
+     * @param id User ID
+     * @return User response details
+     */
+    UserResponse getUserById(UUID id);
 
-    UserResponse createEmployee(com.anhvt.epms.procurement.dto.request.CreateUserRequest request);
+    /**
+     * Create a new employee account (Admin only)
+     * @param request creation request with user details
+     * @return created user response
+     */
+    UserResponse createEmployee(CreateUserRequest request);
 
-    UserResponse updateUser(java.util.UUID id, com.anhvt.epms.procurement.dto.request.UpdateUserRequest request);
+    /**
+     * Update employee information (Admin only)
+     * @param id User ID
+     * @param request update request details
+     * @return updated user response
+     */
+    UserResponse updateUser(UUID id, UpdateUserRequest request);
 
-    void changeUserRole(java.util.UUID id, String roleName);
+    /**
+     * Change user's role (Promote/Demote)
+     * @param id User ID
+     * @param roleName new role name
+     */
+    void changeUserRole(UUID id, String roleName);
 
-    void toggleUserStatus(java.util.UUID id, boolean isActive);
+    /**
+     * Toggle user's active status (Soft delete / Reactivate)
+     * @param id User ID
+     * @param isActive target status boolean
+     */
+    void toggleUserStatus(UUID id, boolean isActive);
 
-    void resetPassword(java.util.UUID id);
+    /**
+     * Reset user's password to default
+     * @param id User ID
+     */
+    void resetPassword(UUID id);
 }

@@ -30,6 +30,8 @@ public class UserResponse {
     
     Set<String> roles;
     
+    boolean requirePasswordChange;
+    
     LocalDateTime createdAt;
     
     LocalDateTime updatedAt;

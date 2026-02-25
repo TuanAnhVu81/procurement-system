@@ -1,7 +1,10 @@
 package com.anhvt.epms.procurement.service.impl;
 
+import com.anhvt.epms.procurement.dto.request.CreateUserRequest;
 import com.anhvt.epms.procurement.dto.request.RegisterRequest;
+import com.anhvt.epms.procurement.dto.request.UpdateUserRequest;
 import com.anhvt.epms.procurement.dto.response.UserResponse;
+import com.anhvt.epms.procurement.entity.Role;
 import com.anhvt.epms.procurement.entity.User;
 import com.anhvt.epms.procurement.enums.Status;
 import com.anhvt.epms.procurement.exception.AppException;
@@ -10,11 +13,21 @@ import com.anhvt.epms.procurement.mapper.UserMapper;
 import com.anhvt.epms.procurement.repository.RoleRepository;
 import com.anhvt.epms.procurement.repository.UserRepository;
 import com.anhvt.epms.procurement.service.UserService;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Implementation of UserService
@@ -75,24 +88,24 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(savedUser);
     }
     @Override
-    public org.springframework.data.domain.Page<UserResponse> getAllUsers(String role, Boolean status, org.springframework.data.domain.Pageable pageable) {
-        org.springframework.data.jpa.domain.Specification<User> spec = (root, query, cb) -> {
-            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+    public Page<UserResponse> getAllUsers(String role, Boolean status, Pageable pageable) {
+        Specification<User> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
             if (role != null && !role.trim().isEmpty()) {
-                jakarta.persistence.criteria.Join<User, com.anhvt.epms.procurement.entity.Role> roleJoin = root.join("roles");
+                Join<User, Role> roleJoin = root.join("roles");
                 predicates.add(cb.equal(roleJoin.get("name"), role));
             }
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status ? Status.ACTIVE : Status.INACTIVE));
             }
-            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
         
         return userRepository.findAll(spec, pageable).map(userMapper::toResponse);
     }
 
     @Override
-    public UserResponse getUserById(java.util.UUID id) {
+    public UserResponse getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         return userMapper.toResponse(user);
@@ -100,7 +113,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse createEmployee(com.anhvt.epms.procurement.dto.request.CreateUserRequest request) {
+    public UserResponse createEmployee(CreateUserRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
@@ -116,19 +129,19 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode("Welcome@123")) 
                 .requirePasswordChange(true) // Turn on the flag
                 .status(Status.ACTIVE)
-                .roles(new java.util.HashSet<>())
+                .roles(new HashSet<>())
                 .build();
 
         // Assign Role
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             for (String roleName : request.getRoles()) {
-                com.anhvt.epms.procurement.entity.Role role = roleRepository.findByName(roleName)
+                Role role = roleRepository.findByName(roleName)
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
                 user.addRole(role);
             }
         } else {
             // Default role is EMPLOYEE
-            com.anhvt.epms.procurement.entity.Role role = roleRepository.findByName("ROLE_EMPLOYEE")
+            Role role = roleRepository.findByName("ROLE_EMPLOYEE")
                     .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
             user.addRole(role);
         }
@@ -139,20 +152,29 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse updateUser(java.util.UUID id, com.anhvt.epms.procurement.dto.request.UpdateUserRequest request) {
+    public UserResponse updateUser(UUID id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                
+        // Only update email if it changed and doesn't belong to another user
+        if (request.getEmail() != null && !user.getEmail().equals(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new AppException(ErrorCode.EMAIL_EXISTED);
+            }
+            user.setEmail(request.getEmail());
+        }
+        
         user.setFullName(request.getFullName());
         return userMapper.toResponse(userRepository.save(user));
     }
 
     @Override
     @Transactional
-    public void changeUserRole(java.util.UUID id, String roleName) {
+    public void changeUserRole(UUID id, String roleName) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
                 
-        com.anhvt.epms.procurement.entity.Role newRole = roleRepository.findByName(roleName)
+        Role newRole = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
                 
         // For simplicity, we replace existing roles with the new single role.
@@ -163,7 +185,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void toggleUserStatus(java.util.UUID id, boolean isActive) {
+    public void toggleUserStatus(UUID id, boolean isActive) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         user.setStatus(isActive ? Status.ACTIVE : Status.INACTIVE);
@@ -172,7 +194,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void resetPassword(java.util.UUID id) {
+    public void resetPassword(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         user.setPassword(passwordEncoder.encode("Welcome@123"));
