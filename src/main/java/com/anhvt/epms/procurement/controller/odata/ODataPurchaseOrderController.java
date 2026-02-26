@@ -85,15 +85,68 @@ public class ODataPurchaseOrderController {
         int page = skip / top;
         Pageable pageable = PageRequest.of(page, top, Sort.by(direction, sortField));
         
-        // Apply $filter if present
+        // ── Parse $filter expression ──────────────────────────────────────────
+        // Supported syntax (as built by frontend odata.js):
+        //   (1) No filter                  → fetch all
+        //   (2) status eq 'APPROVED'        → filter by status only
+        //   (3) contains(poNumber, 'kw')    → keyword search only
+        //   (4) combined with 'and'         → status + keyword both applied
         Page<PurchaseOrderSummaryResponse> poPage;
-        if (filter != null && filter.contains("status eq")) {
-            // Parse filter: "status eq 'APPROVED'"
-            String statusValue = filter.replaceAll(".*'(.*)'.*", "$1");
-            POStatus status = POStatus.valueOf(statusValue.toUpperCase());
-            poPage = purchaseOrderService.getPurchaseOrdersByStatus(status, pageable);
-            log.info("OData: Filtering by status = {}", status);
+
+        boolean hasStatus   = filter != null && filter.contains("status eq");
+        boolean hasContains = filter != null && filter.contains("contains(");
+
+        // Extract status value from filter string: status eq 'APPROVED' → APPROVED
+        POStatus parsedStatus = null;
+        if (hasStatus) {
+            // Regex: grab first single-quoted token after "status eq"
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("status eq '([^']+)'")
+                    .matcher(filter);
+            if (m.find()) {
+                parsedStatus = POStatus.valueOf(m.group(1).toUpperCase());
+            }
+        }
+
+        // Extract keyword from contains(poNumber, 'keyword') or contains(vendorName, 'keyword')
+        String parsedKeyword = null;
+        if (hasContains) {
+            // Regex: grab the keyword inside contains(..., 'keyword')
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("contains\\([^,]+,\\s*'([^']*)'\\)")
+                    .matcher(filter);
+            if (m.find()) {
+                parsedKeyword = m.group(1);
+            }
+        }
+
+        if (hasStatus && hasContains && parsedStatus != null && parsedKeyword != null) {
+            // Case 4: Combined — status + keyword search
+            // Delegate to searchPurchaseOrders then filter by status in memory
+            // (production would use JPA Specification for full DB-side filtering)
+            final POStatus finalStatus = parsedStatus;
+            Page<PurchaseOrderSummaryResponse> searchPage =
+                    purchaseOrderService.searchPurchaseOrders(parsedKeyword, pageable);
+            java.util.List<PurchaseOrderSummaryResponse> filtered = searchPage.getContent()
+                    .stream()
+                    .filter(po -> finalStatus.name().equals(po.getStatus() != null ? po.getStatus().name() : null))
+                    .collect(java.util.stream.Collectors.toList());
+            poPage = new org.springframework.data.domain.PageImpl<>(filtered, pageable,
+                    filtered.size());
+            log.info("OData: Combined filter — status={}, keyword={}", parsedStatus, parsedKeyword);
+
+        } else if (hasStatus && parsedStatus != null) {
+            // Case 2: Status only
+            poPage = purchaseOrderService.getPurchaseOrdersByStatus(parsedStatus, pageable);
+            log.info("OData: Filter by status = {}", parsedStatus);
+
+        } else if (hasContains && parsedKeyword != null) {
+            // Case 3: Keyword only
+            poPage = purchaseOrderService.searchPurchaseOrders(parsedKeyword, pageable);
+            log.info("OData: Keyword search = '{}'", parsedKeyword);
+
         } else {
+            // Case 1: No filter — fetch all
             poPage = purchaseOrderService.getAllPurchaseOrders(pageable);
         }
         
@@ -125,55 +178,5 @@ public class ODataPurchaseOrderController {
         return response;
     }
     
-    /**
-     * GET /odata/PurchaseOrders/{id} - Get single purchase order by ID
-     * Returns full details including items, vendor, and approver information
-     * Required Role: ADMIN, EMPLOYEE, MANAGER
-     */
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
-    @Operation(
-        summary = "Get purchase order by ID",
-        description = "Retrieve a single purchase order with full details by UUID"
-    )
-    public PurchaseOrderResponse getPurchaseOrderById(
-            @Parameter(description = "Purchase Order UUID")
-            @PathVariable UUID id) {
-        
-        log.info("OData: Get purchase order by ID: {}", id);
-        return purchaseOrderService.getPurchaseOrderById(id);
-    }
-    
-    /**
-     * GET /odata/PurchaseOrders/$count - Get total count of purchase orders
-     * OData standard endpoint for getting count only
-     * Required Role: ADMIN, EMPLOYEE, MANAGER
-     */
-    @GetMapping("/$count")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
-    @Operation(
-        summary = "Get total count of purchase orders",
-        description = "Returns the total number of purchase orders (OData $count endpoint)"
-    )
-    public Long getPurchaseOrderCount(
-            @Parameter(description = "Filter expression")
-            @RequestParam(name = "$filter", required = false) String filter) {
-        
-        log.info("OData: Get purchase order count, filter={}", filter);
-        
-        // For now, return count from getAllPurchaseOrders
-        // In production, you might want a dedicated count query
-        Pageable pageable = PageRequest.of(0, 1);
-        
-        Page<PurchaseOrderSummaryResponse> poPage;
-        if (filter != null && filter.contains("status eq")) {
-            String statusValue = filter.replaceAll(".*'(.*)'.*", "$1");
-            POStatus status = POStatus.valueOf(statusValue.toUpperCase());
-            poPage = purchaseOrderService.getPurchaseOrdersByStatus(status, pageable);
-        } else {
-            poPage = purchaseOrderService.getAllPurchaseOrders(pageable);
-        }
-        
-        return poPage.getTotalElements();
-    }
+
 }
