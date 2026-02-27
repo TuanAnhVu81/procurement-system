@@ -33,6 +33,25 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final VendorRepository vendorRepository;
     
+    // Exchange rates for dashboard normalization (simplified for analytics purposes)
+    private static final BigDecimal USD_TO_VND = new BigDecimal("25400"); // Approx 1 USD = ~25,400 VND
+    private static final BigDecimal EUR_TO_VND = new BigDecimal("27500");
+
+    /**
+     * Helper to normalize values to a base currency (VND) for aggregation
+     */
+    private BigDecimal normalizeToVND(BigDecimal amount, String currency) {
+        if (amount == null) return BigDecimal.ZERO;
+        if (currency == null) return amount;
+        
+        return switch (currency.toUpperCase()) {
+            case "USD" -> amount.multiply(USD_TO_VND);
+            case "EUR" -> amount.multiply(EUR_TO_VND);
+            case "VND" -> amount;
+            default -> amount; // Fallback
+        };
+    }
+
     /**
      * Get purchase order status summary
      * Aggregates PO count and total value by status
@@ -60,13 +79,14 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             
             long count = posWithStatus.size();
             BigDecimal totalAmount = posWithStatus.stream()
-                    .map(PurchaseOrder::getGrandTotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .map(po -> normalizeToVND(po.getGrandTotal(), po.getCurrency()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .setScale(0, RoundingMode.HALF_UP);
             
             double percentage = totalCount > 0 ? (count * 100.0 / totalCount) : 0.0;
             
-            // Get currency from first PO or default to USD
-            String currency = posWithStatus.isEmpty() ? "USD" : posWithStatus.get(0).getCurrency();
+            // Fixed base currency after normalization
+            String currency = "VND";
             
             POStatusSummaryResponse summary = POStatusSummaryResponse.builder()
                     .status(status.name())
@@ -96,8 +116,10 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     public List<TopVendorResponse> getTopVendorsByPurchaseValue(int limit) {
         log.info("Generating top {} vendors by purchase value", limit);
         
-        // Get all approved purchase orders
-        List<PurchaseOrder> approvedPOs = purchaseOrderRepository.findByStatus(POStatus.APPROVED);
+        // Get all approved or received purchase orders
+        List<PurchaseOrder> approvedPOs = purchaseOrderRepository.findAll().stream()
+                .filter(po -> po.getStatus() == POStatus.APPROVED || po.getStatus() == POStatus.RECEIVED)
+                .collect(Collectors.toList());
         
         // Group by vendor and calculate totals
         Map<Vendor, List<PurchaseOrder>> groupedByVendor = approvedPOs.stream()
@@ -112,10 +134,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             
             long totalOrders = vendorPOs.size();
             BigDecimal totalValue = vendorPOs.stream()
-                    .map(PurchaseOrder::getGrandTotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .map(po -> normalizeToVND(po.getGrandTotal(), po.getCurrency()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .setScale(0, RoundingMode.HALF_UP);
             
-            String currency = vendorPOs.isEmpty() ? "USD" : vendorPOs.get(0).getCurrency();
+            String currency = "VND"; // All metrics normalized to VND
             
             TopVendorResponse vendorStat = TopVendorResponse.builder()
                     .vendorId(vendor.getId())
@@ -185,23 +208,24 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             // Calculate statistics
             long totalOrders = monthPOs.size();
             long approvedOrders = monthPOs.stream()
-                    .filter(po -> po.getStatus() == POStatus.APPROVED)
+                    .filter(po -> po.getStatus() == POStatus.APPROVED || po.getStatus() == POStatus.RECEIVED)
                     .count();
             
             BigDecimal totalValue = monthPOs.stream()
-                    .filter(po -> po.getStatus() == POStatus.APPROVED)
-                    .map(PurchaseOrder::getGrandTotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .filter(po -> po.getStatus() == POStatus.APPROVED || po.getStatus() == POStatus.RECEIVED)
+                    .map(po -> normalizeToVND(po.getGrandTotal(), po.getCurrency()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .setScale(0, RoundingMode.HALF_UP);
             
             BigDecimal averageOrderValue = approvedOrders > 0 
-                    ? totalValue.divide(BigDecimal.valueOf(approvedOrders), 2, RoundingMode.HALF_UP)
+                    ? totalValue.divide(BigDecimal.valueOf(approvedOrders), 0, RoundingMode.HALF_UP)
                     : BigDecimal.ZERO;
             
             double approvalRate = totalOrders > 0 
                     ? (approvedOrders * 100.0 / totalOrders)
                     : 0.0;
             
-            String currency = monthPOs.isEmpty() ? "USD" : monthPOs.get(0).getCurrency();
+            String currency = "VND"; // Normalized base currency
             
             MonthlyPurchaseTrendResponse trend = MonthlyPurchaseTrendResponse.builder()
                     .year(year)
