@@ -238,4 +238,21 @@ public class VendorServiceImpl implements VendorService {
         
         log.info("Vendor '{}' soft deleted (set to INACTIVE)", vendor.getVendorCode());
     }
+
+    /**
+     * OData keyword search implementation
+     * Delegates to JPA JPQL query that searches across name, vendorCode, email, contactPerson
+     *
+     * @param keyword  search keyword (case-insensitive)
+     * @param pageable pagination
+     * @return page of matching vendors
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VendorResponse> searchByKeyword(String keyword, Pageable pageable) {
+        // Delegate to repository JPQL query — no business logic needed
+        Page<Vendor> vendors = vendorRepository.searchByKeyword(keyword, pageable);
+        log.info("OData search vendors by keyword='{}', found={}", keyword, vendors.getTotalElements());
+        return vendors.map(vendorMapper::toResponse);
+    }
 }

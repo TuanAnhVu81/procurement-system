@@ -74,4 +74,14 @@ public interface VendorService {
      * @param id vendor ID
      */
     void deleteVendor(UUID id);
+
+    /**
+     * OData keyword search: search vendors by name, vendorCode, email, or contactPerson
+     * Used by /odata/Vendors endpoint to support $filter=contains(...) queries
+     *
+     * @param keyword search keyword
+     * @param pageable pagination information
+     * @return page of matching vendors
+     */
+    Page<VendorResponse> searchByKeyword(String keyword, Pageable pageable);
 }

@@ -78,4 +78,25 @@ public interface MaterialService {
      * @param id material ID
      */
     void deleteMaterial(UUID id);
+
+    /**
+     * OData keyword search: search materials by description or materialCode
+     * Used by /odata/Materials endpoint to support $filter=contains(...) queries
+     *
+     * @param keyword search keyword
+     * @param pageable pagination information
+     * @return page of matching materials
+     */
+    Page<MaterialResponse> searchByKeyword(String keyword, Pageable pageable);
+
+    /**
+     * OData combined search: keyword + active status filter
+     * Supports $filter=isActive eq true and contains(description,'kw')
+     *
+     * @param keyword  search keyword
+     * @param isActive active status filter
+     * @param pageable pagination information
+     * @return page of matching active materials
+     */
+    Page<MaterialResponse> searchByKeywordAndActive(String keyword, Boolean isActive, Pageable pageable);
 }

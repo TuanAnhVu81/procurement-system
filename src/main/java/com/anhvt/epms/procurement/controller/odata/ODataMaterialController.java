@@ -73,54 +73,76 @@ public class ODataMaterialController {
         int page = skip / top;
         Pageable pageable = PageRequest.of(page, top, Sort.by(direction, sortField));
         
-        // Apply $filter if present
+        // ── Parse $filter expression ──────────────────────────────────────────
+        // Supported syntax for Materials:
+        //   (1) No filter                         → fetch all
+        //   (2) isActive eq true/false             → filter by active status
+        //   (3) contains(description, 'kw')        → keyword search
+        //   (4) combined with 'and'                → isActive + keyword
         Page<MaterialResponse> materialPage;
-        if (filter != null && filter.contains("isActive eq true")) {
-            materialPage = materialService.getActiveMaterials(pageable);
+
+        boolean hasActive   = filter != null && filter.contains("isActive eq");
+        boolean hasContains = filter != null && filter.contains("contains(");
+
+        // Extract isActive value: isActive eq true → Boolean.TRUE
+        Boolean parsedActive = null;
+        if (hasActive) {
+            parsedActive = filter.contains("isActive eq true");
+        }
+
+        // Extract keyword from contains(description, 'keyword') or contains(materialCode, 'keyword')
+        String parsedKeyword = null;
+        if (hasContains) {
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("contains\\([^,]+,\\s*'([^']*)'\\)")
+                    .matcher(filter);
+            if (m.find()) {
+                parsedKeyword = m.group(1);
+            }
+        }
+
+        if (hasActive && hasContains && parsedKeyword != null) {
+            // Case 4: Combined — keyword search filtered by active status
+            materialPage = materialService.searchByKeywordAndActive(parsedKeyword, parsedActive, pageable);
+            log.info("OData Material: Combined isActive={}, keyword={}", parsedActive, parsedKeyword);
+
+        } else if (hasActive) {
+            // Case 2: isActive filter only
+            materialPage = parsedActive
+                    ? materialService.getActiveMaterials(pageable)
+                    : materialService.getAllMaterials(pageable); // false = get all (including inactive)
+            log.info("OData Material: Filter isActive={}", parsedActive);
+
+        } else if (hasContains && parsedKeyword != null) {
+            // Case 3: Keyword only
+            materialPage = materialService.searchByKeyword(parsedKeyword, pageable);
+            log.info("OData Material: Keyword search='{}'", parsedKeyword);
+
         } else {
+            // Case 1: No filter
             materialPage = materialService.getAllMaterials(pageable);
         }
-        
-        // Build OData response
+
+        // Build OData response envelope
         ODataCollectionResponse<MaterialResponse> response = ODataCollectionResponse.<MaterialResponse>builder()
                 .context(ODATA_CONTEXT)
                 .value(materialPage.getContent())
                 .build();
-        
-        // Add count if requested
+
+        // Inline count — returned when FE sends $count=true
         if (count) {
             response.setCount(materialPage.getTotalElements());
         }
-        
-        // Add nextLink if there are more pages
+
+        // nextLink for cursor-based navigation
         if (materialPage.hasNext()) {
             int nextSkip = skip + top;
-            String nextLink = String.format("/odata/Materials?$top=%d&$skip=%d&$orderby=%s", 
-                    top, nextSkip, orderby);
+            String nextLink = String.format("/odata/Materials?$top=%d&$skip=%d&$orderby=%s", top, nextSkip, orderby);
+            if (filter != null) nextLink += "&$filter=" + filter;
             response.setNextLink(nextLink);
         }
-        
-        log.info("OData response: returned {} materials (total: {})", 
-                materialPage.getContent().size(), materialPage.getTotalElements());
-        
+
+        log.info("OData Material response: {} materials (total: {})", materialPage.getContent().size(), materialPage.getTotalElements());
         return response;
-    }
-    
-    /**
-     * GET /odata/Materials/{id} - Get single material by ID
-     * Required Role: ADMIN, EMPLOYEE, MANAGER
-     */
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
-    @Operation(
-        summary = "Get material by ID",
-        description = "Retrieve a single material by UUID"
-    )
-    public MaterialResponse getMaterialById(
-            @Parameter(description = "Material UUID")
-            @PathVariable UUID id) {
-        
-        log.info("OData: Get material by ID: {}", id);
-        return materialService.getMaterialById(id);
     }
 }

@@ -74,57 +74,84 @@ public class ODataVendorController {
         int page = skip / top;
         Pageable pageable = PageRequest.of(page, top, Sort.by(direction, sortField));
         
-        // Apply $filter if present
+        // ── Parse $filter expression ──────────────────────────────────────────
+        // Supported syntax (same pattern as ODataPurchaseOrderController):
+        //   (1) No filter                  → fetch all
+        //   (2) status eq 'ACTIVE'          → filter by status
+        //   (3) contains(name, 'kw')        → keyword search
+        //   (4) combined with 'and'         → status + keyword
         Page<VendorResponse> vendorPage;
-        if (filter != null && filter.contains("status eq")) {
-            // Parse simple filter: "status eq 'ACTIVE'"
-            String statusValue = filter.replaceAll(".*'(.*)'.*", "$1");
-            Status status = Status.valueOf(statusValue.toUpperCase());
-            vendorPage = vendorService.getVendorsByStatus(status, pageable);
+
+        boolean hasStatus   = filter != null && filter.contains("status eq");
+        boolean hasContains = filter != null && filter.contains("contains(");
+
+        // Extract status: status eq 'ACTIVE' → ACTIVE
+        Status parsedStatus = null;
+        if (hasStatus) {
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("status eq '([^']+)'")
+                    .matcher(filter);
+            if (m.find()) {
+                parsedStatus = Status.valueOf(m.group(1).toUpperCase());
+            }
+        }
+
+        // Extract keyword from contains(name, 'keyword') or contains(vendorCode, 'keyword')
+        String parsedKeyword = null;
+        if (hasContains) {
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("contains\\([^,]+,\\s*'([^']*)'\\)")
+                    .matcher(filter);
+            if (m.find()) {
+                parsedKeyword = m.group(1);
+            }
+        }
+
+        if (hasStatus && hasContains && parsedStatus != null && parsedKeyword != null) {
+            // Case 4: Combined — search by keyword then filter by status in memory
+            final Status finalStatus = parsedStatus;
+            Page<VendorResponse> searched = vendorService.searchByKeyword(parsedKeyword, pageable);
+            java.util.List<VendorResponse> filtered = searched.getContent().stream()
+                    .filter(v -> finalStatus.name().equals(v.getStatus() != null ? v.getStatus().name() : null))
+                    .collect(java.util.stream.Collectors.toList());
+            vendorPage = new org.springframework.data.domain.PageImpl<>(filtered, pageable, filtered.size());
+            log.info("OData Vendor: Combined status={}, keyword={}", parsedStatus, parsedKeyword);
+
+        } else if (hasStatus && parsedStatus != null) {
+            // Case 2: Status only
+            vendorPage = vendorService.getVendorsByStatus(parsedStatus, pageable);
+            log.info("OData Vendor: Filter by status={}", parsedStatus);
+
+        } else if (hasContains && parsedKeyword != null) {
+            // Case 3: Keyword only
+            vendorPage = vendorService.searchByKeyword(parsedKeyword, pageable);
+            log.info("OData Vendor: Keyword search='{}'", parsedKeyword);
+
         } else {
+            // Case 1: No filter
             vendorPage = vendorService.getAllVendors(pageable);
         }
-        
-        // Build OData response
+
+        // Build OData response envelope
         ODataCollectionResponse<VendorResponse> response = ODataCollectionResponse.<VendorResponse>builder()
                 .context(ODATA_CONTEXT)
                 .value(vendorPage.getContent())
                 .build();
-        
-        // Add count if requested
+
+        // Inline count — returned when FE sends $count=true
         if (count) {
             response.setCount(vendorPage.getTotalElements());
         }
-        
-        // Add nextLink if there are more pages
+
+        // nextLink for cursor-based navigation (optional, useful for large datasets)
         if (vendorPage.hasNext()) {
             int nextSkip = skip + top;
-            String nextLink = String.format("/odata/Vendors?$top=%d&$skip=%d&$orderby=%s", 
-                    top, nextSkip, orderby);
+            String nextLink = String.format("/odata/Vendors?$top=%d&$skip=%d&$orderby=%s", top, nextSkip, orderby);
+            if (filter != null) nextLink += "&$filter=" + filter;
             response.setNextLink(nextLink);
         }
-        
-        log.info("OData response: returned {} vendors (total: {})", 
-                vendorPage.getContent().size(), vendorPage.getTotalElements());
-        
+
+        log.info("OData Vendor response: {} vendors (total: {})", vendorPage.getContent().size(), vendorPage.getTotalElements());
         return response;
-    }
-    
-    /**
-     * GET /odata/Vendors/{id} - Get single vendor by ID
-     * Required Role: ADMIN, EMPLOYEE, MANAGER
-     */
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
-    @Operation(
-        summary = "Get vendor by ID",
-        description = "Retrieve a single vendor by UUID"
-    )
-    public VendorResponse getVendorById(
-            @Parameter(description = "Vendor UUID")
-            @PathVariable UUID id) {
-        
-        log.info("OData: Get vendor by ID: {}", id);
-        return vendorService.getVendorById(id);
     }
 }

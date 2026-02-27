@@ -265,4 +265,36 @@ public class MaterialServiceImpl implements MaterialService {
         
         log.info("Material '{}' soft deleted (set to INACTIVE)", material.getMaterialCode());
     }
+
+    /**
+     * OData keyword search: find materials by description or materialCode
+     *
+     * @param keyword  search keyword
+     * @param pageable pagination
+     * @return page of matching materials
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MaterialResponse> searchByKeyword(String keyword, Pageable pageable) {
+        Page<Material> materials = materialRepository.searchByKeyword(keyword, pageable);
+        log.info("OData search materials by keyword='{}', found={}", keyword, materials.getTotalElements());
+        return materials.map(materialMapper::toResponse);
+    }
+
+    /**
+     * OData combined search: keyword + active status filter
+     * Supports $filter=isActive eq true and contains(description,'kw')
+     *
+     * @param keyword  search keyword
+     * @param isActive active status filter
+     * @param pageable pagination
+     * @return page of matching materials
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MaterialResponse> searchByKeywordAndActive(String keyword, Boolean isActive, Pageable pageable) {
+        Page<Material> materials = materialRepository.searchByKeywordAndActive(keyword, isActive, pageable);
+        log.info("OData search materials keyword='{}', isActive={}, found={}", keyword, isActive, materials.getTotalElements());
+        return materials.map(materialMapper::toResponse);
+    }
 }
