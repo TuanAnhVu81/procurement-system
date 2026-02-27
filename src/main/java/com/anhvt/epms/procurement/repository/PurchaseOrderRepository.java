@@ -45,6 +45,10 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
     @Query("SELECT po FROM PurchaseOrder po WHERE po.status != 'CANCELLED'")
     Page<PurchaseOrder> findAllActive(Pageable pageable);
     
+    // Find active POs for specific creator
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.createdBy = :username AND po.status != 'CANCELLED'")
+    Page<PurchaseOrder> findActiveByCreatedBy(@Param("username") String username, Pageable pageable);
+    
     // Count by status
     long countByStatus(POStatus status);
     

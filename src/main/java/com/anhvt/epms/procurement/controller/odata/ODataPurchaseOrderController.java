@@ -80,6 +80,13 @@ public class ODataPurchaseOrderController {
         Sort.Direction direction = (orderParts.length > 1 && orderParts[1].equalsIgnoreCase("desc")) 
                 ? Sort.Direction.DESC 
                 : Sort.Direction.ASC;
+                
+        // ── Map DTO fields to Entity fields for DB sorting ──
+        if ("vendorName".equalsIgnoreCase(sortField)) {
+            sortField = "vendor.name";
+        } else if ("approverName".equalsIgnoreCase(sortField)) {
+            sortField = "approver.username";
+        }
         
         // Create Pageable
         int page = skip / top;
