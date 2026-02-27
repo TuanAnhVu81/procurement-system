@@ -1,6 +1,6 @@
 package com.anhvt.epms.procurement.mapper;
 
-import com.anhvt.epms.procurement.dto.request.RegisterRequest;
+import com.anhvt.epms.procurement.dto.request.CreateUserRequest;
 import com.anhvt.epms.procurement.dto.response.UserResponse;
 import com.anhvt.epms.procurement.entity.Role;
 import com.anhvt.epms.procurement.entity.User;
@@ -19,15 +19,16 @@ import java.util.stream.Collectors;
 public interface UserMapper extends BaseMapper {
     
     /**
-     * Convert RegisterRequest to User entity
+     * Convert CreateUserRequest to User entity (Admin-only flow)
      * Password will be encoded separately in the service layer
-     * @param request registration request
+     * @param request admin user creation request
      * @return User entity
      */
-    @Mapping(target = "password", ignore = true) // Will be set after encoding
+    @Mapping(target = "password", ignore = true) // Will be set to default Welcome@123 after encoding
     @Mapping(target = "status", ignore = true) // Will be set to ACTIVE by default
-    @Mapping(target = "roles", ignore = true) // Will be set separately
-    User toEntity(RegisterRequest request);
+    @Mapping(target = "roles", ignore = true) // Will be assigned after resolving role names to entities
+    @Mapping(target = "requirePasswordChange", ignore = true) // Will be set to true by service
+    User toEntity(CreateUserRequest request);
     
     /**
      * Convert User entity to UserResponse DTO
