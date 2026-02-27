@@ -1,7 +1,6 @@
 package com.anhvt.epms.procurement.service;
 
 import com.anhvt.epms.procurement.dto.request.CreateUserRequest;
-import com.anhvt.epms.procurement.dto.request.RegisterRequest;
 import com.anhvt.epms.procurement.dto.request.UpdateUserRequest;
 import com.anhvt.epms.procurement.dto.response.UserResponse;
 import org.springframework.data.domain.Page;
@@ -14,13 +13,6 @@ import java.util.UUID;
  */
 public interface UserService {
     
-    /**
-     * Register a new user
-     * @param request registration request
-     * @return created user response
-     */
-    UserResponse register(RegisterRequest request);
-
     /**
      * Get all users with optional filtering and pagination
      * @param role User role name to filter by
