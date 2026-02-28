@@ -4,17 +4,11 @@ import com.anhvt.epms.procurement.dto.request.VendorRatingRequest;
 import com.anhvt.epms.procurement.dto.request.VendorRequest;
 import com.anhvt.epms.procurement.dto.response.ApiResponse;
 import com.anhvt.epms.procurement.dto.response.VendorResponse;
-import com.anhvt.epms.procurement.enums.Status;
 import com.anhvt.epms.procurement.service.VendorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -58,23 +52,6 @@ public class VendorController {
     }
     
     /**
-     * Get all vendors with pagination
-     * GET /api/vendors
-     * Required Role: ADMIN, EMPLOYEE, MANAGER
-     */
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
-    @Operation(summary = "Get all vendors", description = "Retrieve all vendors with pagination and sorting")
-    public Page<VendorResponse> getAllVendors(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        return vendorService.getAllVendors(pageable);
-    }
-    
-    /**
      * Get vendor by ID
      * GET /api/vendors/{id}
      * Required Role: ADMIN, EMPLOYEE, MANAGER
@@ -90,42 +67,6 @@ public class VendorController {
                 .message("Vendor retrieved successfully")
                 .result(response)
                 .build();
-    }
-    
-    /**
-     * Search vendor by code
-     * GET /api/vendors/search?code={vendorCode}
-     * Required Role: ADMIN, EMPLOYEE, MANAGER
-     */
-    @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
-    @Operation(summary = "Search vendor by code", description = "Find vendor by unique vendor code")
-    public ApiResponse<VendorResponse> searchVendorByCode(@RequestParam String code) {
-        VendorResponse response = vendorService.getVendorByCode(code);
-        
-        return ApiResponse.<VendorResponse>builder()
-
-                .message("Vendor found")
-                .result(response)
-                .build();
-    }
-    
-    /**
-     * Get vendors by status
-     * GET /api/vendors/status/{status}
-     * Required Role: ADMIN, EMPLOYEE, MANAGER
-     */
-    @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'MANAGER')")
-    @Operation(summary = "Get vendors by status", description = "Filter vendors by status (ACTIVE/INACTIVE)")
-    public Page<VendorResponse> getVendorsByStatus(
-            @PathVariable Status status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        return vendorService.getVendorsByStatus(status, pageable);
     }
     
     /**
