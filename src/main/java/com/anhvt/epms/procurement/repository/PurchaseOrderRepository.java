@@ -59,21 +59,38 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
            "ORDER BY po.poNumber DESC LIMIT 1")
     Optional<String> findLatestPoNumberByPrefix(@Param("prefix") String prefix);
     
-    // Analytics: Total purchase amount by vendor
-    @Query("SELECT po.vendor.id, SUM(po.grandTotal) FROM PurchaseOrder po " +
-           "WHERE po.status = 'APPROVED' AND po.status != 'CANCELLED' " +
-           "GROUP BY po.vendor.id ORDER BY SUM(po.grandTotal) DESC")
+    // Analytics: Total purchase amount by vendor (APPROVED or RECEIVED status only)
+    // Using correct SQL GROUP BY on vendor ID to avoid redundant conditions
+    @Query("SELECT po.vendor.id, SUM(po.grandTotal), po.currency FROM PurchaseOrder po " +
+           "WHERE po.status IN ('APPROVED', 'RECEIVED') " +
+           "GROUP BY po.vendor.id, po.currency " +
+           "ORDER BY SUM(po.grandTotal) DESC")
     List<Object[]> getTotalPurchaseAmountByVendor();
     
     // Analytics: Count POs by status (excluding cancelled)
-    @Query("SELECT po.status, COUNT(po) FROM PurchaseOrder po " +
-           "WHERE po.status != 'CANCELLED' GROUP BY po.status")
+    // Returns [status, count, totalGrandTotal, currency] per group
+    @Query("SELECT po.status, COUNT(po), SUM(po.grandTotal), po.currency " +
+           "FROM PurchaseOrder po " +
+           "WHERE po.status != 'CANCELLED' " +
+           "GROUP BY po.status, po.currency")
     List<Object[]> countPurchaseOrdersByStatus();
     
-    // Find POs pending approval (not cancelled)
-    @Query("SELECT po FROM PurchaseOrder po WHERE po.status = 'PENDING' AND po.status != 'CANCELLED'")
+    // Analytics: Monthly purchase trend query — aggregates POs within a date range
+    // Returns [orderDate, count, currency, totalGrandTotal] per day-currency slice
+    @Query("SELECT po.orderDate, COUNT(po), po.currency, SUM(po.grandTotal) " +
+           "FROM PurchaseOrder po " +
+           "WHERE po.orderDate BETWEEN :startDate AND :endDate " +
+           "AND po.status != 'CANCELLED' " +
+           "GROUP BY po.orderDate, po.currency " +
+           "ORDER BY po.orderDate ASC")
+    List<Object[]> findPurchaseTrendByDateRange(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    // Find POs pending approval
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.status = 'PENDING'")
     Page<PurchaseOrder> findPendingApprovalPOs(Pageable pageable);
-    
+
     // Find by vendor and status
     Page<PurchaseOrder> findByVendor_IdAndStatus(UUID vendorId, POStatus status, Pageable pageable);
 }
