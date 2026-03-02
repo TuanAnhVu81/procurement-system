@@ -79,7 +79,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
             "http://localhost:5173",
             "http://localhost:3000",
-            "https://epms-frontend.vercel.app"
+            "https://epms-portal.vercel.app"
         ));
 
         // Allow standard HTTP methods
